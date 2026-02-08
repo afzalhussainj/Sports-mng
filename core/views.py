@@ -35,7 +35,9 @@ def is_admin(user):
 
 def is_score_manager(user):
     """Check if user is a score manager"""
-    return hasattr(user, 'score_manager_profile')
+    if not user or not user.is_authenticated:
+        return False
+    return ScoreManagerProfile.objects.filter(user=user).exists()
 
 
 def can_upload_photos(user):
@@ -103,6 +105,27 @@ def convert_to_16_9(image_file):
     return output
 
 
+def ensure_default_admin_role(user):
+    """Ensure default admin user has staff privileges."""
+    if not user or not user.is_authenticated:
+        return
+
+    default_admin_email = os.environ.get('DEFAULT_ADMIN_EMAIL', 'admin@gmail.com')
+    if default_admin_email and (user.email == default_admin_email or user.username == default_admin_email):
+        if not user.is_staff:
+            user.is_staff = True
+            user.save(update_fields=['is_staff'])
+
+
+def ensure_score_manager_profile(user):
+    """Ensure a score manager profile exists for non-admin users."""
+    if not user or not user.is_authenticated:
+        return
+    if is_admin(user):
+        return
+    ScoreManagerProfile.objects.get_or_create(user=user)
+
+
 def get_supabase_client():
     """Create Supabase client if configured"""
     try:
@@ -140,6 +163,8 @@ def fetch_slideshow_images(limit=50):
 def login_view(request):
     """Login page with role-aware redirect"""
     if request.user.is_authenticated:
+        ensure_default_admin_role(request.user)
+        ensure_score_manager_profile(request.user)
         if is_admin(request.user):
             return redirect('admin_panel')
         elif is_score_manager(request.user):
@@ -151,6 +176,9 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+
+            ensure_default_admin_role(user)
+            ensure_score_manager_profile(user)
             
             # Role-aware redirect
             if is_admin(user):
