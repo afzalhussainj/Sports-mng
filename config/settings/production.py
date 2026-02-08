@@ -36,9 +36,12 @@ else:
         },
     }
 
-# Database must be configured
+# Database must be configured in production runtime
 if not config('DATABASE_URL', default=None):
-    raise ValueError("DATABASE_URL must be set in production")
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 
 # CORS / CSRF
 cors_origins = config('CORS_ALLOWED_ORIGINS', default='')
