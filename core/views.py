@@ -30,7 +30,7 @@ from core.forms import (
 
 def is_admin(user):
     """Check if user is admin (superuser)"""
-    return user.is_superuser
+    return user.is_superuser or user.is_staff
 
 
 def is_score_manager(user):
