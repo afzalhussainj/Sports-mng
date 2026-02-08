@@ -3,6 +3,7 @@ ASGI config for sports_gala project.
 """
 
 import os
+import django
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
@@ -12,9 +13,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', os.getenv('DJANGO_SETTINGS_MODUL
 
 # Initialize Django ASGI application early to ensure the AppRegistry
 # is populated before importing code that may import ORM models.
+django.setup()
 django_asgi_app = get_asgi_application()
 
-import core.routing
+from core import routing as core_routing
 
 application = ProtocolTypeRouter({
     # Django's ASGI application to handle traditional HTTP requests
@@ -24,7 +26,7 @@ application = ProtocolTypeRouter({
     "websocket": AllowedHostsOriginValidator(
         AuthMiddlewareStack(
             URLRouter(
-                core.routing.websocket_urlpatterns
+                core_routing.websocket_urlpatterns
             )
         )
     ),
