@@ -1,0 +1,47 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 256) rotate(90) scale(220)">
+      <stop offset="0" stop-color="#22D3EE" stop-opacity="0.25"/>
+      <stop offset="0.6" stop-color="#22D3EE" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="128" y1="128" x2="384" y2="384" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="160" y1="120" x2="352" y2="392" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#0B1224" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="none"/>
+
+  <circle cx="256" cy="256" r="220" fill="url(#glow)"/>
+  <circle cx="256" cy="256" r="190" fill="url(#glass)" stroke="url(#ring)" stroke-width="8"/>
+  <circle cx="256" cy="256" r="165" stroke="#22D3EE" stroke-opacity="0.4" stroke-width="2"/>
+
+  <!-- Torch icon -->
+  <g filter="url(#softGlow)">
+    <path d="M256 148 C276 168 276 196 256 214 C236 196 236 168 256 148Z" fill="#22D3EE"/>
+    <path d="M256 216 C286 232 290 260 256 284 C222 260 226 232 256 216Z" fill="#38BDF8"/>
+    <rect x="236" y="284" width="40" height="72" rx="8" fill="#0EA5E9"/>
+    <rect x="226" y="356" width="60" height="28" rx="10" fill="#0B3B5E" stroke="#22D3EE" stroke-width="2"/>
+  </g>
+
+  <!-- Laurel arcs -->
+  <g stroke="#22D3EE" stroke-opacity="0.6" stroke-width="3" fill="none">
+    <path d="M140 260 C132 210 154 176 198 156"/>
+    <path d="M372 260 C380 210 358 176 314 156"/>
+  </g>
+
+  <!-- Text -->
+  <text x="256" y="420" text-anchor="middle" fill="#67E8F9" font-size="28" font-family="Inter, Segoe UI, Arial, sans-serif" letter-spacing="4">DEPARTMENT</text>
+</svg>

@@ -1,0 +1,71 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Delete Score Manager - Admin{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-64 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">ADMIN</h2>
+            <p class="text-cyan-500 text-xs">Delete Score Manager</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="{% url 'manage_games' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎮 Games</a>
+            <a href="{% url 'manage_teams_members' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">👥 Teams & Members</a>
+            <a href="{% url 'manage_matches' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🏆 Matches</a>
+            <a href="{% url 'manage_awards' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">⭐ Awards</a>
+            <a href="{% url 'manage_score_managers' %}" class="block px-4 py-2 bg-cyan-900/30 rounded text-cyan-300">📊 Score Managers</a>
+            <a href="{% url 'randomizer_panel' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎲 Randomizer</a>
+            <a href="{% url 'upload_photo' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">📸 Upload Memories</a>
+        </nav>
+        <div class="border-t border-cyan-700 p-4">
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">DELETE SCORE MANAGER</h1>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8 flex items-center justify-center">
+            <div class="max-w-md w-full">
+                <div class="sci-fi-card p-8">
+                    <div class="text-center mb-8">
+                        <div class="text-5xl mb-4">⚠️</div>
+                        <h2 class="text-red-400 font-bold text-lg">CONFIRM DELETION</h2>
+                    </div>
+
+                    <div class="bg-red-900/20 border border-red-600/50 p-4 rounded mb-6">
+                        <p class="text-red-300 text-sm mb-4">
+                            You are about to permanently delete the score manager:
+                        </p>
+                        <p class="text-cyan-300 font-bold text-center text-lg bg-black/30 p-3 rounded">
+                            {{ manager.username }}
+                        </p>
+                        <p class="text-red-300 text-sm mt-4">
+                            This action <span class="font-bold">CANNOT BE UNDONE</span>. The score manager account will be completely removed from the system.
+                        </p>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <a href="{% url 'manage_score_managers' %}" class="flex-1 sci-fi-button text-center text-xs py-2 bg-gray-700 hover:bg-gray-600">
+                            CANCEL
+                        </a>
+                        <form method="post" class="flex-1">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full sci-fi-button text-xs py-2 bg-red-900 hover:bg-red-800">
+                                DELETE MANAGER
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

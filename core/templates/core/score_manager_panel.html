@@ -1,0 +1,135 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Score Manager - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-80 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">SCORE MANAGER</h2>
+            <p class="text-cyan-500 text-xs mt-1">{{ user.username }}</p>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-2">
+            <h3 class="text-magenta-400 font-bold text-sm mb-3">ASSIGNED GAMES:</h3>
+            {% for game in assigned_games %}
+                <a href="#game-{{ game.id }}" class="game-tab block px-4 py-3 rounded border border-cyan-700 text-cyan-300 hover:bg-cyan-900/30 transition" data-game-id="{{ game.id }}">
+                    <div class="font-bold">{{ game.name }}</div>
+                    <div class="text-xs {% if game.completed %}text-green-400{% else %}text-cyan-500{% endif %}">
+                        {% if game.completed %}✅ Completed{% else %}📝 Active{% endif %}
+                    </div>
+                </a>
+            {% empty %}
+                <p class="text-cyan-600 text-sm">No games assigned</p>
+            {% endfor %}
+        </div>
+
+        <div class="border-t border-cyan-700 p-4 space-y-2">
+            <a href="{% url 'randomizer_panel' %}" class="sci-fi-button text-xs w-full block text-center">🎲 RANDOMIZER</a>
+            <a href="{% url 'public_dashboard' %}" class="sci-fi-button text-xs w-full block text-center">← DASHBOARD</a>
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl" id="game-title">SELECT A GAME</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-8">
+            <div id="content" class="space-y-6">
+                <div class="text-center text-cyan-400">
+                    <p>Select a game from the sidebar to view and update matches</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.game-tab').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            const gameId = this.getAttribute('data-game-id');
+            loadGame(gameId);
+            
+            // Highlight active tab
+            document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('bg-cyan-900/30'));
+            this.classList.add('bg-cyan-900/30');
+        });
+    });
+
+    async function loadGame(gameId) {
+        const content = document.getElementById('content');
+        const title = document.getElementById('game-title');
+        
+        content.innerHTML = '<p class="text-cyan-400">Loading...</p>';
+
+        try {
+            const response = await fetch(`/api/games/${gameId}/`);
+            const gameData = await response.json();
+            title.textContent = gameData.name;
+
+            // Get matches
+            const matchesResponse = await fetch(`/api/games/${gameId}/matches/`);
+            const matchesData = await matchesResponse.json();
+
+            // Build HTML
+            let html = '<div class="space-y-4">';
+            
+            // Game status and action buttons
+            html += `<div class="sci-fi-card p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-magenta-400 font-bold mb-2">Game Status</h3>
+                        <p class="text-cyan-300">${gameData.completed ? 'COMPLETED' : 'ACTIVE'}</p>
+                    </div>
+                    ${!gameData.completed ? `<a href="/score-manager/game/${gameId}/schedule-match/" class="sci-fi-button text-xs">+ SCHEDULE</a>` : ''}
+                </div>
+            </div>`;
+
+            // Matches list
+            html += '<div class="sci-fi-card p-4">';
+            html += '<h3 class="text-magenta-400 font-bold mb-4">Matches</h3>';
+            
+            if (matchesData.matches.length === 0) {
+                html += '<p class="text-cyan-600">No matches scheduled</p>';
+            } else {
+                html += '<div class="space-y-3">';
+                matchesData.matches.forEach(match => {
+                    html += `
+                        <div class="bg-gray-900 border border-cyan-700 rounded p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="font-bold text-cyan-300">${match.team_a} vs ${match.team_b}</div>
+                                <span class="text-xs bg-magenta-900 px-2 py-1 rounded text-magenta-300">${match.status}</span>
+                            </div>
+                            <div class="text-sm text-cyan-400 mb-2">
+                                ${match.scheduled_at} • ${match.location}
+                            </div>
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="font-bold text-lg">
+                                    <span class="text-yellow-400">${match.score_a}</span> - <span class="text-yellow-400">${match.score_b}</span>
+                                </div>
+                            </div>
+                            <a href="/score-manager/match/${match.id}/update/" class="sci-fi-button text-xs">UPDATE SCORE</a>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+
+            content.innerHTML = html;
+        } catch (error) {
+            content.innerHTML = '<p class="text-red-400">Error loading game data</p>';
+            console.error('Error:', error);
+        }
+    }
+</script>
+{% endblock %}

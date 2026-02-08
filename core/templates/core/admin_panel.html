@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Admin Panel - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar Navigation -->
+    <div class="w-full md:w-64 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">ADMIN PANEL</h2>
+            <p class="text-cyan-500 text-xs mt-1">Full System Access</p>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <a href="{% url 'manage_games' %}" class="admin-nav-link block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/30 transition">
+                🎮 Manage Games
+            </a>
+            <a href="{% url 'manage_teams_members' %}" class="admin-nav-link block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/30 transition">
+                👥 Teams & Members
+            </a>
+            <a href="{% url 'manage_matches' %}" class="admin-nav-link block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/30 transition">
+                🏆 Manage Matches
+            </a>
+            <a href="{% url 'manage_awards' %}" class="admin-nav-link block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/30 transition">
+                ⭐ Manage Awards
+            </a>
+            <a href="{% url 'manage_score_managers' %}" class="admin-nav-link block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/30 transition">
+                📊 Score Managers
+            </a>
+            <a href="{% url 'randomizer_panel' %}" class="admin-nav-link block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/30 transition">
+                🎲 Randomizer
+            </a>
+            <a href="{% url 'upload_photo' %}" class="admin-nav-link block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/30 transition">
+                📸 Upload Memories
+            </a>
+        </nav>
+
+        <div class="border-t border-cyan-700 p-4 text-center">
+            <p class="text-cyan-500 text-xs mb-2">{{ user.username }}</p>
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">SYSTEM MANAGEMENT</h1>
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1 overflow-y-auto p-8">
+            <div id="content" class="space-y-8">
+                <!-- Section will be populated by JavaScript -->
+                <div class="text-center text-cyan-400">
+                    <p>Select an option from the sidebar to manage</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

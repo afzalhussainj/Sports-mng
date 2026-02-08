@@ -1,0 +1,84 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Assign Games to {{ manager.username }} - Admin{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-64 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">ADMIN</h2>
+            <p class="text-cyan-500 text-xs">Score Managers</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="{% url 'manage_games' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎮 Games</a>
+            <a href="{% url 'manage_teams_members' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">👥 Teams & Members</a>
+            <a href="{% url 'manage_matches' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🏆 Matches</a>
+            <a href="{% url 'manage_awards' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">⭐ Awards</a>
+            <a href="{% url 'manage_score_managers' %}" class="block px-4 py-2 bg-cyan-900/30 rounded text-cyan-300">📊 Score Managers</a>
+        </nav>
+        <div class="border-t border-cyan-700 p-4">
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">ASSIGN GAMES TO {{ manager.username|upper }}</h1>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="max-w-2xl">
+                <div class="sci-fi-card p-6">
+                    <h3 class="text-magenta-400 font-bold text-lg mb-2">📊 Select Games</h3>
+                    <p class="text-cyan-500 text-sm mb-6">Choose which games this score manager can manage.</p>
+                    
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        
+                        <!-- Games Checkboxes -->
+                        <div class="space-y-3">
+                            {% for game_id, game_name in form.assigned_games.field.choices %}
+                                <div class="flex items-center p-3 bg-gray-900/60 border border-cyan-700/50 rounded hover:bg-gray-900/80 transition">
+                                    <input type="checkbox" name="assigned_games" value="{{ game_id }}" 
+                                        id="game_{{ game_id }}"
+                                        {% if game_id|stringformat:"s" in form.assigned_games.value %}checked{% endif %}
+                                        class="w-4 h-4 accent-cyan-400 cursor-pointer">
+                                    <label for="game_{{ game_id }}" class="ml-3 text-cyan-300 cursor-pointer flex-1">
+                                        🎮 {{ game_name }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if form.assigned_games.errors %}
+                            <div class="text-red-400 text-xs bg-red-900/20 p-3 rounded">
+                                {{ form.assigned_games.errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3 pt-6 border-t border-cyan-700/50">
+                            <button type="submit" class="sci-fi-button flex-1 text-xs py-2">SAVE ASSIGNMENTS</button>
+                            <a href="{% url 'manage_score_managers' %}" class="sci-fi-button flex-1 text-xs py-2 text-center bg-gray-700 hover:bg-gray-600">CANCEL</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="checkbox"] {
+        cursor: pointer;
+    }
+    
+    label {
+        cursor: pointer;
+    }
+</style>
+
+{% endblock %}

@@ -1,0 +1,537 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Randomizer Panel - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    {% if is_admin %}
+        <div class="w-full md:w-64 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+            <div class="p-6 border-b border-cyan-700">
+                <h2 class="text-cyan-400 font-bold text-lg">ADMIN</h2>
+                <p class="text-cyan-500 text-xs">Randomizer</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="{% url 'manage_games' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎮 Games</a>
+                <a href="{% url 'manage_teams_members' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">👥 Teams & Members</a>
+                <a href="{% url 'manage_matches' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🏆 Matches</a>
+                <a href="{% url 'manage_awards' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">⭐ Awards</a>
+                <a href="{% url 'manage_score_managers' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">📊 Score Managers</a>
+                <a href="{% url 'randomizer_panel' %}" class="block px-4 py-2 bg-cyan-900/30 rounded text-cyan-300">🎲 Randomizer</a>
+                <a href="{% url 'upload_photo' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">📸 Upload Memories</a>
+            </nav>
+            <div class="border-t border-cyan-700 p-4">
+                <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="w-full md:w-80 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+            <div class="p-6 border-b border-cyan-700">
+                <h2 class="text-cyan-400 font-bold text-lg">SCORE MANAGER</h2>
+                <p class="text-cyan-500 text-xs mt-1">{{ user.username }}</p>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                <h3 class="text-magenta-400 font-bold text-sm mb-3">ASSIGNED GAMES:</h3>
+                {% for game in games %}
+                    <div class="block px-4 py-3 rounded border border-cyan-700 text-cyan-300">
+                        <div class="font-bold">{{ game.name }}</div>
+                        <div class="text-xs {% if game.completed %}text-green-400{% else %}text-cyan-500{% endif %}">
+                            {% if game.completed %}✅ Completed{% else %}📝 Active{% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-cyan-600 text-sm">No games assigned</p>
+                {% endfor %}
+            </div>
+            <div class="border-t border-cyan-700 p-4 space-y-2">
+                <a href="{% url 'randomizer_panel' %}" class="sci-fi-button text-xs w-full block text-center">🎲 RANDOMIZER</a>
+                <a href="{% url 'public_dashboard' %}" class="sci-fi-button text-xs w-full block text-center">← DASHBOARD</a>
+                <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4 flex justify-between items-center">
+            <h1 class="sci-fi-title text-2xl" id="page-title">RANDOMIZER</h1>
+            <div id="action-buttons" class="flex gap-3" style="display: none;">
+                <button id="clear-available-btn" class="sci-fi-button text-sm bg-red-900 hover:bg-red-800">CLEAR AVAILABLE</button>
+                <button id="randomize-btn" class="sci-fi-button text-sm bg-green-900 hover:bg-green-800">🎲 RANDOMIZE</button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-8">
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                <div id="message-container" class="mb-6">
+                    {% for message in messages %}
+                        <div class="message-alert bg-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-900/30 border border-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-500 text-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-300 px-4 py-3 rounded relative mb-3 transition-opacity duration-500">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div id="content" class="space-y-6">
+                <div class="sci-fi-card p-6">
+                    <h3 class="text-magenta-400 font-bold text-lg mb-4">SELECT GAME</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                        {% for game in games %}
+                            <button class="game-selector w-full text-left px-4 py-3 rounded border border-cyan-700 text-cyan-300 hover:bg-cyan-900/30 transition" data-game-id="{{ game.id }}" data-game-name="{{ game.name }}">
+                                <div class="font-bold">{{ game.name }}</div>
+                                <div class="text-xs {% if game.completed %}text-green-400{% else %}text-cyan-500{% endif %}">
+                                    {% if game.completed %}✅ Completed{% else %}📝 Active{% endif %}
+                                </div>
+                            </button>
+                        {% empty %}
+                            <p class="text-cyan-600 text-sm">No games available</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="text-center text-cyan-400">
+                    <p class="text-lg">🎯 Select a game above to manage team availability</p>
+                    <p class="text-sm mt-2 text-cyan-600">The randomizer will pick two teams from your available list</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Schedule Match Modal -->
+<div id="schedule-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center" style="display: none; z-index: 1000;">
+    <div class="bg-gray-900 border-2 border-cyan-500 rounded-lg p-8 max-w-2xl w-full mx-4 sci-fi-border">
+        <h2 class="text-cyan-400 font-bold text-2xl mb-6">🎲 SCHEDULE MATCH</h2>
+        
+        <div id="modal-teams" class="bg-gray-800 border border-cyan-700 rounded p-6 mb-6">
+            <div class="flex justify-center items-center gap-8 text-xl font-bold">
+                <span id="modal-team-a" class="text-yellow-400">Team A</span>
+                <span class="text-magenta-400">VS</span>
+                <span id="modal-team-b" class="text-yellow-400">Team B</span>
+            </div>
+        </div>
+
+        <form id="quick-schedule-form" class="space-y-4">
+            <div>
+                <label class="block text-cyan-400 font-bold text-sm mb-2">Scheduled Date & Time *</label>
+                <input type="datetime-local" id="modal-scheduled-at" required class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 text-cyan-300 rounded">
+            </div>
+
+            <div>
+                <label class="block text-cyan-400 font-bold text-sm mb-2">Location</label>
+                <input type="text" id="modal-location" placeholder="e.g., Court A, Field B" class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 text-cyan-300 rounded">
+            </div>
+
+            <div>
+                <label class="block text-cyan-400 font-bold text-sm mb-2">Match Stage <span class="text-cyan-600 text-xs">(Optional - for playoffs)</span></label>
+                <select id="modal-match-stage" class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 text-cyan-300 rounded">
+                    <option value="">-- Regular Match --</option>
+                    <option value="quarter_final">Quarter Final</option>
+                    <option value="semi_final">Semi Final</option>
+                    <option value="final">Final</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-cyan-400 font-bold text-sm mb-2">Notes</label>
+                <textarea id="modal-notes" rows="2" placeholder="Optional notes" class="w-full px-4 py-2 bg-gray-800 border border-cyan-500 text-cyan-300 rounded"></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="sci-fi-button flex-1 font-bold bg-green-900 hover:bg-green-800">SCHEDULE MATCH</button>
+                <button type="button" id="modal-close" class="sci-fi-button flex-1 font-bold bg-cyan-900">CANCEL</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .team-item {
+        cursor: move;
+        transition: all 0.2s;
+    }
+    .team-item:hover {
+        transform: translateX(4px);
+    }
+    .team-list {
+        min-height: 100px;
+    }
+    .dragging {
+        opacity: 0.5;
+    }
+    .drag-over {
+        background-color: rgba(6, 182, 212, 0.1);
+        border-color: rgba(6, 182, 212, 0.5);
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .spinning {
+        animation: spin 0.5s linear infinite;
+    }
+</style>
+
+<script>
+let currentGameId = null;
+let currentGameName = null;
+let selectedTeamA = null;
+let selectedTeamB = null;
+
+// Game selection
+document.querySelectorAll('.game-selector').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentGameId = this.getAttribute('data-game-id');
+        currentGameName = this.getAttribute('data-game-name');
+        
+        // Update UI
+        document.querySelectorAll('.game-selector').forEach(b => b.classList.remove('bg-cyan-900/30'));
+        this.classList.add('bg-cyan-900/30');
+        
+        document.getElementById('page-title').textContent = `RANDOMIZER - ${currentGameName}`;
+        document.getElementById('action-buttons').style.display = 'flex';
+        
+        loadTeams();
+    });
+});
+
+async function loadTeams() {
+    const content = document.getElementById('content');
+    content.innerHTML = '<p class="text-cyan-400 text-center">Loading teams...</p>';
+    
+    try {
+        const response = await fetch(`/api/randomizer/${currentGameId}/available-teams/`);
+        const data = await response.json();
+        
+        renderTeamsUI(data.all_teams, data.available_teams);
+    } catch (error) {
+        content.innerHTML = '<p class="text-red-400 text-center">Error loading teams</p>';
+        console.error('Error:', error);
+    }
+}
+
+function renderTeamsUI(allTeams, availableTeams) {
+    const availableIds = availableTeams.map(t => t.id);
+    const unavailableTeams = allTeams.filter(t => !availableIds.includes(t.id));
+    
+    const html = `
+        <div class="grid grid-cols-2 gap-6">
+            <!-- All Teams -->
+            <div class="sci-fi-card p-6">
+                <h3 class="text-magenta-400 font-bold text-lg mb-4">ALL TEAMS</h3>
+                <div id="all-teams-list" class="team-list space-y-2 min-h-[200px] p-2 border-2 border-dashed border-cyan-700 rounded">
+                    ${unavailableTeams.length === 0 ? '<p class="text-cyan-600 text-sm text-center py-8">All teams are available</p>' : ''}
+                    ${unavailableTeams.map(team => `
+                        <div class="team-item bg-gray-800 border border-cyan-700 rounded p-3 flex justify-between items-center" draggable="true" data-team-id="${team.id}">
+                            <span class="text-cyan-300 font-bold">${team.name}</span>
+                            <button class="add-team-btn text-green-400 hover:text-green-300 text-xl" data-team-id="${team.id}" title="Add to Available">➕</button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <!-- Available Teams -->
+            <div class="sci-fi-card p-6">
+                <h3 class="text-green-400 font-bold text-lg mb-4">AVAILABLE TEAMS (${availableTeams.length})</h3>
+                <div id="available-teams-list" class="team-list space-y-2 min-h-[200px] p-2 border-2 border-dashed border-green-700 rounded">
+                    ${availableTeams.length === 0 ? '<p class="text-cyan-600 text-sm text-center py-8">No teams available yet</p>' : ''}
+                    ${availableTeams.map(team => `
+                        <div class="team-item bg-gray-800 border border-green-700 rounded p-3 flex justify-between items-center" draggable="true" data-team-id="${team.id}">
+                            <span class="text-green-300 font-bold">${team.name}</span>
+                            <button class="remove-team-btn text-red-400 hover:text-red-300 text-xl" data-team-id="${team.id}" title="Remove from Available">➖</button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+        
+        <div class="sci-fi-card p-6 mt-6 bg-gray-800/50">
+            <h4 class="text-cyan-400 font-bold mb-2">💡 How to use:</h4>
+            <ul class="text-cyan-500 text-sm space-y-1 list-disc list-inside">
+                <li>Click ➕ or drag teams to the <span class="text-green-400">AVAILABLE TEAMS</span> list</li>
+                <li>Click ➖ or drag teams back to <span class="text-cyan-400">ALL TEAMS</span> to remove them</li>
+                <li>Click <span class="text-green-400">🎲 RANDOMIZE</span> to pick 2 random teams from available list</li>
+                <li>Available teams list persists until you click <span class="text-red-400">CLEAR AVAILABLE</span></li>
+            </ul>
+        </div>
+    `;
+    
+    document.getElementById('content').innerHTML = html;
+    
+    // Attach event listeners
+    attachDragDropListeners();
+    attachButtonListeners();
+}
+
+function attachDragDropListeners() {
+    const teamItems = document.querySelectorAll('.team-item');
+    const teamLists = document.querySelectorAll('.team-list');
+    
+    teamItems.forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        });
+        
+        item.addEventListener('dragend', function() {
+            this.classList.remove('dragging');
+        });
+    });
+    
+    teamLists.forEach(list => {
+        list.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+        
+        list.addEventListener('dragleave', function() {
+            this.classList.remove('drag-over');
+        });
+        
+        list.addEventListener('drop', async function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            const draggingElement = document.querySelector('.dragging');
+            if (!draggingElement) return;
+            
+            const teamId = draggingElement.getAttribute('data-team-id');
+            const targetList = this.id;
+            
+            if (targetList === 'available-teams-list') {
+                await addTeamToAvailable(teamId);
+            } else if (targetList === 'all-teams-list') {
+                await removeTeamFromAvailable(teamId);
+            }
+        });
+    });
+}
+
+function attachButtonListeners() {
+    document.querySelectorAll('.add-team-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const teamId = this.getAttribute('data-team-id');
+            addTeamToAvailable(teamId);
+        });
+    });
+    
+    document.querySelectorAll('.remove-team-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const teamId = this.getAttribute('data-team-id');
+            removeTeamFromAvailable(teamId);
+        });
+    });
+}
+
+async function addTeamToAvailable(teamId) {
+    try {
+        const response = await fetch(`/api/randomizer/${currentGameId}/available-teams/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ team_id: teamId })
+        });
+        
+        if (response.ok) {
+            loadTeams(); // Reload teams
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function removeTeamFromAvailable(teamId) {
+    try {
+        const response = await fetch(`/api/randomizer/${currentGameId}/available-teams/`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ team_id: teamId })
+        });
+        
+        if (response.ok) {
+            loadTeams(); // Reload teams
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Clear available teams
+document.getElementById('clear-available-btn').addEventListener('click', async function() {
+    if (!confirm('Clear all available teams for this game?')) return;
+    
+    try {
+        const response = await fetch(`/api/randomizer/${currentGameId}/clear-available/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (response.ok) {
+            loadTeams();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+
+// Randomize button
+document.getElementById('randomize-btn').addEventListener('click', async function() {
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    // Animate button
+    btn.innerHTML = '🎲 <span class="spinning inline-block">⚡</span> SPINNING...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch(`/api/randomizer/${currentGameId}/pick-teams/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ preview: true })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            selectedTeamA = data.team_a;
+            selectedTeamB = data.team_b;
+            
+            // Show modal
+            setTimeout(() => {
+                showScheduleModal(data.team_a, data.team_b, data.game_id);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1000);
+        } else {
+            alert(data.error || 'Not enough teams available');
+            loadTeams();
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error picking teams');
+        loadTeams();
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+
+function showScheduleModal(teamA, teamB, gameId) {
+    document.getElementById('modal-team-a').textContent = teamA.name;
+    document.getElementById('modal-team-b').textContent = teamB.name;
+    document.getElementById('schedule-modal').style.display = 'flex';
+    
+    // Set default date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
+    document.getElementById('modal-scheduled-at').value = tomorrow.toISOString().slice(0, 16);
+}
+
+// Modal close
+document.getElementById('modal-close').addEventListener('click', function() {
+    document.getElementById('schedule-modal').style.display = 'none';
+});
+
+// Quick schedule form
+document.getElementById('quick-schedule-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        game_id: currentGameId,
+        team_a_id: selectedTeamA.id,
+        team_b_id: selectedTeamB.id,
+        scheduled_at: document.getElementById('modal-scheduled-at').value,
+        location: document.getElementById('modal-location').value,
+        match_stage: document.getElementById('modal-match-stage').value,
+        notes: document.getElementById('modal-notes').value
+    };
+    
+    try {
+        // Create match via API
+        const response = await fetch(`/api/randomizer/${currentGameId}/pick-teams/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                create_match: true,
+                team_a_id: formData.team_a_id,
+                team_b_id: formData.team_b_id,
+                scheduled_at: formData.scheduled_at,
+                location: formData.location,
+                match_stage: formData.match_stage,
+                notes: formData.notes
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Match created successfully!');
+            document.getElementById('schedule-modal').style.display = 'none';
+            selectedTeamA = null;
+            selectedTeamB = null;
+            loadTeams();
+        } else {
+            alert(data.error || 'Failed to create match');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error creating match');
+    }
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Auto-hide messages after 4 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const messageContainer = document.getElementById('message-container');
+    if (messageContainer) {
+        setTimeout(function() {
+            const messages = messageContainer.querySelectorAll('.message-alert');
+            messages.forEach(function(message) {
+                message.style.opacity = '0';
+            });
+            setTimeout(function() {
+                messageContainer.remove();
+            }, 500);
+        }, 4000);
+    }
+});
+</script>
+{% endblock %}

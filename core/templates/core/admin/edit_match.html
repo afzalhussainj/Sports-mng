@@ -1,0 +1,75 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Edit Match - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8 overflow-y-auto">
+    <div class="max-w-2xl mx-auto">
+        <div class="sci-fi-card p-6 mb-6">
+            <h2 class="text-cyan-400 font-bold text-2xl mb-2">EDIT MATCH</h2>
+            <p class="text-cyan-600">Update match details</p>
+        </div>
+
+        <div class="sci-fi-card p-6 mb-8">
+            <form method="post">
+                {% csrf_token %}
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Game</label>
+                        {{ form.game }}
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-cyan-300 font-bold mb-2">Team A</label>
+                            {{ form.team_a }}
+                        </div>
+                        <div>
+                            <label class="block text-cyan-300 font-bold mb-2">Team B</label>
+                            {{ form.team_b }}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-cyan-300 font-bold mb-2">Score A</label>
+                            {{ form.score_a }}
+                        </div>
+                        <div>
+                            <label class="block text-cyan-300 font-bold mb-2">Score B</label>
+                            {{ form.score_b }}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Scheduled At</label>
+                        {{ form.scheduled_at }}
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Location</label>
+                        {{ form.location }}
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Status</label>
+                        {{ form.status }}
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Match Stage</label>
+                        {{ form.match_stage }}
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Winner</label>
+                        {{ form.winner_team }}
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-8">
+                    <button type="submit" class="sci-fi-button bg-cyan-900 hover:bg-cyan-800 px-6 py-3">💾 SAVE</button>
+                    <a href="{% url 'manage_matches' %}" class="sci-fi-button bg-gray-700 hover:bg-gray-600 px-6 py-3">← CANCEL</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

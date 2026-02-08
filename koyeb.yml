@@ -1,0 +1,41 @@
+apiVersion: 1
+regions:
+  - name: ord  # Chicago (fastest for US)
+
+services:
+  - name: sports-gala
+    git:
+      repository_url: https://github.com/username/sports-gala.git
+      branch: main
+    healthchecks:
+      startup:
+        http_path: /
+        failing_threshold: 3
+        initial_delay: 30
+        period: 10
+        success_threshold: 2
+        timeout: 5
+    env:
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings.production
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        scope: secret
+      - key: REDIS_URL
+        scope: secret
+      - key: DJANGO_SECRET_KEY
+        scope: secret
+      - key: ALLOWED_HOSTS
+        value: sports-gala.koyeb.app,yourdomain.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://sports-gala.koyeb.app,https://yourdomain.com,wss://sports-gala.koyeb.app,wss://yourdomain.com"
+    routes:
+      - path: /
+    ports:
+      - name: http
+        port: 8000
+    scaling:
+      min_instances: 1
+      max_instances: 3
+      target_cpu_utilization_percentage: 80

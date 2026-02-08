@@ -1,0 +1,1308 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Sports Gala - Live Dashboard{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col overflow-y-auto bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 relative">
+    <!-- Particle Background -->
+    <div id="particles-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+    
+    <!-- Header -->
+    <div class="border-b border-slate-800/60 bg-slate-950/70 backdrop-blur px-5 py-1.5 relative z-10">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <h1 class="text-2xl md:text-3xl font-semibold text-transparent bg-gradient-to-r from-cyan-300 via-slate-200 to-purple-300 bg-clip-text">
+                    SPORTS GALA
+                </h1>
+                <div class="h-6 w-px bg-slate-700"></div>
+                <span id="header-sport-name" class="text-lg font-medium text-cyan-400">—</span>
+            </div>
+            {% if user.is_authenticated %}
+                {% if is_admin %}
+                    <a href="{% url 'admin_panel' %}" class="sci-fi-button text-xs px-3 py-1">ADMIN PANEL</a>
+                {% elif is_score_manager %}
+                    <a href="{% url 'score_manager_panel' %}" class="sci-fi-button text-xs px-3 py-1">SCORE MANAGER PANEL</a>
+                {% else %}
+                    <a href="{% url 'logout' %}" class="sci-fi-button text-xs px-3 py-1">LOGOUT</a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'login' %}" class="sci-fi-button text-xs px-3 py-1">LOGIN</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col px-3 py-2 md:overflow-hidden relative z-10">
+        <!-- Primary Rows -->
+        <div class="grid grid-cols-12 gap-3 min-h-0 flex-none md:flex-1">
+            <!-- Spotlight Column -->
+            <div class="col-span-12 flex flex-col min-h-0">
+                <div class="flex-1 min-h-0">
+                    <div id="game-spotlight-container" class="relative flex-1 min-h-0 h-full">
+                        {% for game in games %}
+                            <div class="game-spotlight absolute inset-0 opacity-0 transition-all duration-500 flex flex-col min-h-0 h-full" data-game-id="{{ game.id }}">
+                                <div class="grid grid-cols-12 gap-2 min-h-0 flex-1">
+                                    <!-- First Row: Top Teams, Achievements, Upcoming Matches, Memories -->
+                                    <div class="col-span-12 grid grid-cols-1 xl:grid-cols-4 gap-2"">
+                                        <!-- Top Teams -->
+                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed">
+                                            <div class="section-title-compact">Top Teams</div>
+                                            <div class="grid grid-cols-12 text-[10px] text-slate-400 uppercase tracking-wider pb-1 px-1">
+                                                <div class="col-span-2">Rank</div>
+                                                <div class="col-span-7">Team</div>
+                                                <div class="col-span-3 text-center">W-L</div>
+                                            </div>
+                                            <div id="spotlight-leaderboard-{{ game.id }}" class="divide-y divide-slate-800/60 flex-1 overflow-hidden">
+                                                <!-- Populated via JavaScript (Top 3 only) -->
+                                            </div>
+                                        </div>
+
+                                        <!-- Achievements -->
+                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed">
+                                            <div class="section-title-compact">Achievements</div>
+                                            <div class="space-y-1 flex-1 overflow-hidden">
+                                                {% with awards=game.awards.all %}
+                                                    {% with total_awards=awards|length %}
+                                                        {% with awards_preview=awards|slice:":3" %}
+                                                            {% if awards_preview %}
+                                                                {% for award in awards_preview %}
+                                                                    <div class="grid grid-cols-12 gap-1 items-center rounded border border-slate-800/60 bg-slate-900/40 px-2 py-1">
+                                                                        <div class="col-span-7 text-xs text-slate-100 font-medium truncate">{{ award.award_label }}</div>
+                                                                        <div class="col-span-5 text-[10px] text-slate-400 truncate text-right">
+                                                                            {% if award.member and award.team %}
+                                                                                {{ award.member.name }} ({{ award.team.name }})
+                                                                            {% elif award.member %}
+                                                                                {{ award.member.name }}
+                                                                            {% elif award.team %}
+                                                                                {{ award.team.name }}
+                                                                            {% else %}—{% endif %}
+                                                                        </div>
+                                                                    </div>
+                                                                {% endfor %}
+                                                                {% if total_awards > 3 %}
+                                                                    <div class="text-[10px] text-slate-400 text-right">+ {{ total_awards|add:"-3" }} more</div>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <div class="text-slate-500 text-xs text-center py-4">No awards yet</div>
+                                                            {% endif %}
+                                                        {% endwith %}
+                                                    {% endwith %}
+                                                {% endwith %}
+                                            </div>
+                                        </div>
+
+                                        <!-- Upcoming Matches -->
+                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed">
+                                            <div class="section-title-compact">Upcoming Matches</div>
+                                            <div id="spotlight-matches-{{ game.id }}" class="space-y-1 flex-1 overflow-hidden">
+                                                <!-- Populated via JavaScript (Top 5 only) -->
+                                            </div>
+                                        </div>
+
+                                        <!-- Memories Placeholder (actual content shown via floating overlay) -->
+                                        <div class="dashboard-card-inner flex flex-col opacity-0 pointer-events-none">
+                                            <div class="section-title-compact">Memories</div>
+                                            <!-- 16:9 Aspect Ratio Container (matching actual memories height) -->
+                                            <div class="w-full relative bg-slate-950/40 rounded overflow-hidden" style="padding-bottom: 56.25%;"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tournament Bracket (Full Width Below) -->
+                                    <div id="tournament-bracket-{{ game.id }}" class="col-span-12 dashboard-card-inner flex flex-col" style="min-height: 350px;">
+                                            <!-- Populated via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <!-- Floating Memories Slideshow (Independent, Always Visible) -->
+                        <div id="floating-memories" class="relative xl:absolute xl:top-0 xl:right-0 xl:w-1/4 xl:pl-2 pointer-events-auto z-30">
+                            <div class="dashboard-card-inner flex flex-col h-full">
+                                <div class="section-title-compact">Memories</div>
+                                <!-- 16:9 Aspect Ratio Container -->
+                                <div class="w-full relative bg-slate-950/40 rounded overflow-hidden" style="padding-bottom: 56.25%;">
+                                    <img id="memory-slide" alt="Sports Gala Memories" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-700" />
+                                    <div id="memory-empty" class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs">No memories yet</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t border-slate-800/60 px-6 py-2 text-center text-[11px] text-slate-500 bg-slate-950/60 backdrop-blur relative z-10">
+        <p>Live Sports Gala Dashboard • Real-time Updates</p>
+    </div>
+</div>
+
+<!-- Confetti Canvas -->
+<canvas id="confetti-canvas" class="absolute inset-0 pointer-events-none" style="z-index: 100;"></canvas>
+
+<script>
+    // WebSocket Connection
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socket = new WebSocket(`${protocol}//${window.location.host}/ws/dashboard/`);
+
+    socket.onopen = function() {
+        console.log('✅ WebSocket connected');
+        document.querySelectorAll('[data-game-id]').forEach(el => {
+            const gameId = el.getAttribute('data-game-id');
+            socket.send(JSON.stringify({
+                action: 'subscribe_game',
+                game_id: gameId
+            }));
+        });
+    };
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'match_update') {
+            updateGameData(data.game_id);
+            triggerConfetti();
+        } else if (data.type === 'award_update') {
+            location.reload();
+        }
+    };
+
+    // Particle Background
+    function createParticles() {
+        const container = document.getElementById('particles-container');
+        for (let i = 0; i < 50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'absolute w-1 h-1 bg-cyan-400 rounded-full opacity-20';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animation = `float ${5 + Math.random() * 10}s linear infinite`;
+            particle.style.animationDelay = Math.random() * 5 + 's';
+            container.appendChild(particle);
+        }
+    }
+
+    // Game Spotlight Rotation
+    let spotlightIndex = 0;
+    let spotlights = document.querySelectorAll('.game-spotlight');
+    let spotlightInterval = null;
+    let isSpotlightPaused = false;
+    let currentSpotlightGameId = null;
+    const gameStats = new Map();
+
+    function showSpotlight(index) {
+        spotlights.forEach((spotlight, i) => {
+            if (i === index) {
+                spotlight.classList.remove('opacity-0');
+                spotlight.classList.add('opacity-100');
+                spotlight.style.position = 'relative';
+            } else {
+                spotlight.classList.remove('opacity-100');
+                spotlight.classList.add('opacity-0');
+                spotlight.style.position = 'absolute';
+            }
+        });
+
+        const current = spotlights[index];
+        currentSpotlightGameId = current ? current.getAttribute('data-game-id') : null;
+        if (currentSpotlightGameId) {
+            updateSummary(currentSpotlightGameId);
+        }
+    }
+
+    function nextSpotlight() {
+        spotlightIndex = (spotlightIndex + 1) % spotlights.length;
+        showSpotlight(spotlightIndex);
+    }
+
+    function prevSpotlight() {
+        spotlightIndex = (spotlightIndex - 1 + spotlights.length) % spotlights.length;
+        showSpotlight(spotlightIndex);
+    }
+
+    function startSpotlightRotation() {
+        spotlightInterval = setInterval(nextSpotlight, 8000);
+    }
+
+    function stopSpotlightRotation() {
+        clearInterval(spotlightInterval);
+    }
+
+    // Memories Slideshow Rotation
+    let memoryImages = {{ slideshow_images_json|safe }};
+    let memoryIndex = 0;
+    let memoryInterval = null;
+
+    const memorySlide = document.getElementById('memory-slide');
+    const memoryEmpty = document.getElementById('memory-empty');
+    const headerSportName = document.getElementById('header-sport-name');
+
+    function updateSummary(gameId) {
+        const stats = gameStats.get(String(gameId));
+        if (!stats) return;
+
+        if (headerSportName) headerSportName.textContent = stats.name || '—';
+    }
+
+    function showMemorySlide() {
+        if (!memoryImages.length || !memorySlide) {
+            if (memoryEmpty) {
+                memoryEmpty.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (memoryEmpty) {
+            memoryEmpty.classList.add('hidden');
+        }
+
+        memorySlide.classList.remove('opacity-100');
+        memorySlide.classList.add('opacity-0');
+
+        setTimeout(() => {
+            memorySlide.src = memoryImages[memoryIndex % memoryImages.length];
+            memorySlide.classList.remove('opacity-0');
+            memorySlide.classList.add('opacity-100');
+            memoryIndex += 1;
+        }, 250);
+    }
+
+    function startMemoryRotation() {
+        showMemorySlide();
+        memoryInterval = setInterval(showMemorySlide, 8000);
+    }
+
+    async function refreshMemoryImages() {
+        try {
+            const res = await fetch('/slideshow-json/');
+            const data = await res.json();
+            if (Array.isArray(data.images)) {
+                const hadImages = memoryImages.length > 0;
+                memoryImages = data.images;
+                // Only reset index if we previously had no images
+                if (!hadImages && memoryImages.length > 0) {
+                    memoryIndex = 0;
+                    showMemorySlide();
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing memory images:', error);
+        }
+    }
+
+    // Load game data
+    async function updateGameData(gameId) {
+        try {
+            const response = await fetch(`/api/games/${gameId}/`);
+            const gameData = await response.json();
+            
+            // Update leaderboard (Top 3 only)
+            const leaderboard = document.getElementById(`spotlight-leaderboard-${gameId}`);
+            let sortedTeams = [];
+            if (leaderboard) {
+                sortedTeams = gameData.teams.sort((a, b) => b.points - a.points).slice(0, 3);
+                leaderboard.innerHTML = sortedTeams.map((team, idx) => {
+                    return `
+                        <div class="grid grid-cols-12 items-center gap-1 py-1 px-1 hover:bg-slate-800/40 rounded">
+                            <div class="col-span-2">
+                                <span class="rank-badge-compact ${
+                                    idx === 0 ? 'bg-yellow-500 text-black' : 
+                                    idx === 1 ? 'bg-slate-300 text-black' : 
+                                    idx === 2 ? 'bg-orange-500 text-white' : 'bg-slate-700 text-slate-200'
+                                }">${idx + 1}</span>
+                            </div>
+                            <div class="col-span-7 truncate text-slate-100 text-xs font-medium">${team.name}</div>
+                            <div class="col-span-3 text-center text-[10px] font-mono text-slate-300">${team.wins}-${team.losses}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Update matches
+            let matchesData = { matches: [] };
+            try {
+                const matchesResponse = await fetch(`/api/games/${gameId}/matches/`);
+                matchesData = await matchesResponse.json();
+            } catch (error) {
+                console.error('Error loading matches:', error);
+            }
+
+            const matchesDiv = document.getElementById(`spotlight-matches-${gameId}`);
+            if (matchesDiv) {
+                const upcoming = (matchesData.matches || []).filter(m => m.status !== 'completed').slice(0, 5);
+                matchesDiv.innerHTML = upcoming.length > 0 ? upcoming.map(match => {
+                    const status = (match.status || 'upcoming').toLowerCase();
+                    const label = status === 'ongoing' || status === 'live' ? 'LIVE' : status === 'completed' ? 'FINAL' : 'UPCOMING';
+                    return `
+                        <div class="flex items-start gap-2 rounded border border-slate-800/60 bg-slate-900/40 px-2 py-1">
+                            <div class="mt-0.5 h-1.5 w-1.5 rounded-full ${label === 'LIVE' ? 'bg-rose-400' : label === 'FINAL' ? 'bg-emerald-400' : 'bg-sky-400'}"></div>
+                            <div class="flex-1">
+                                <div class="text-xs font-medium text-slate-100">${match.team_a} <span class="text-slate-400">vs</span> ${match.team_b}</div>
+                                <div class="text-[10px] text-slate-400">${match.location} • ${new Date(match.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') : '<p class="text-slate-500 text-center text-sm">No upcoming matches</p>';
+            }
+
+            // Update tournament bracket (non-blocking)
+            const bracketDiv = document.getElementById(`tournament-bracket-${gameId}`);
+            if (bracketDiv) {
+                renderTournamentBracket(bracketDiv, gameId);
+            }
+
+            const totalMatches = (matchesData.matches || []).length;
+            const liveCount = (matchesData.matches || []).filter(m => {
+                const status = (m.status || '').toLowerCase();
+                return status === 'ongoing' || status === 'live';
+            }).length;
+            const topTeam = sortedTeams[0]?.name || '—';
+
+            gameStats.set(String(gameId), {
+                name: gameData.name,
+                totalMatches,
+                liveCount,
+                topTeam
+            });
+
+            if (!currentSpotlightGameId || String(gameId) === String(currentSpotlightGameId)) {
+                updateSummary(gameId);
+            }
+        } catch (error) {
+            console.error('Error loading game data:', error);
+        }
+    }
+
+    // Tournament Bracket Renderer - Fetches dynamic bracket structure from API
+    async function renderTournamentBracket(container, gameId) {
+        try {
+            const response = await fetch(`/api/games/${gameId}/bracket/`);
+            const bracketData = response.ok ? await response.json() : { rounds: [], error: 'No bracket data' };
+            
+            if (!bracketData.rounds || bracketData.rounds.length === 0) {
+                container.innerHTML = '<div class="text-slate-500 text-center py-6">No bracket rounds yet</div>';
+                return;
+            }
+            
+            const rounds = bracketData.rounds;
+            const stageOrder = ['quarter_final', 'semi_final', 'final'];
+            const stageLabels = {
+                quarter_final: 'Quarter Finals',
+                semi_final: 'Semi Finals',
+                final: 'Final'
+            };
+
+            const allMatches = rounds.flatMap(round => round.matches || []);
+            const stageGroups = stageOrder.map(stage => ({
+                stage,
+                matches: allMatches.filter(match => match.match_stage === stage)
+            })).filter(group => group.matches.length > 0);
+
+            if (stageGroups.length === 0) {
+                container.innerHTML = '<div class="text-slate-500 text-center py-6">No playoff matches yet</div>';
+                return;
+            }
+
+            // Vertical pyramid: Champion at top, QF at bottom
+            let html = '<div class="bracket-pyramid">';
+
+            // Champion at top - ONLY show if Final match has a winner
+            const finalMatch = stageGroups.find(group => group.stage === 'final')?.matches?.[0];
+            const championName = finalMatch?.winner?.name || null;
+            const hasChampion = championName && championName !== 'TBD' && championName !== null;
+
+            // Only display champion level if final match with winner exists
+            if (hasChampion) {
+                html += '<div class="pyramid-level champion-level">';
+                html += '<div class="pyramid-level-title">Champion</div>';
+                html += `
+                    <div class="pyramid-champion ${hasChampion ? 'has-winner' : ''}">
+                        <div class="champion-trophy">🏆</div>
+                        <div class="champion-name">${championName || 'TBD'}</div>
+                    </div>
+                `;
+                html += '</div>';
+            }
+
+            // Reverse stage order for pyramid (Final → Semi → Quarter)
+            const reversedStages = [...stageGroups].reverse();
+
+            reversedStages.forEach((group, groupIdx) => {
+                html += `<div class="pyramid-level" data-stage="${group.stage}">`;
+                html += `<div class="pyramid-level-title">${stageLabels[group.stage]}</div>`;
+                html += '<div class="pyramid-matches">';
+
+                group.matches.forEach((match, matchIdx) => {
+                    const status = (match.status || 'upcoming').toLowerCase();
+                    const isLive = status === 'ongoing' || status === 'live';
+                    const isCompleted = status === 'completed';
+                    const teamAName = match.team_a?.name || 'TBD';
+                    const teamBName = match.team_b?.name || 'TBD';
+                    const scoreA = match.score_a ?? 0;
+                    const scoreB = match.score_b ?? 0;
+                    const winnerName = match.winner?.name || null;
+
+                    let firstTeamName, secondTeamName, firstScore, secondScore;
+                    
+                    if (group.stage === 'quarter_final') {
+                        // RULE 1: Quarter Finals - Winner ALWAYS on top
+                        if (winnerName === teamAName) {
+                            firstTeamName = teamAName;
+                            secondTeamName = teamBName;
+                            firstScore = scoreA;
+                            secondScore = scoreB;
+                        } else if (winnerName === teamBName) {
+                            firstTeamName = teamBName;
+                            secondTeamName = teamAName;
+                            firstScore = scoreB;
+                            secondScore = scoreA;
+                        } else {
+                            // No winner yet, keep original order
+                            firstTeamName = teamAName;
+                            secondTeamName = teamBName;
+                            firstScore = scoreA;
+                            secondScore = scoreB;
+                        }
+                    } else {
+                        // RULE 2 & 3: Semi Finals & Final - Side-locking based on source match
+                        // Find which Quarter Final matches these teams came from
+                        const qfMatches = allMatches.filter(m => m.match_stage === 'quarter_final');
+                        
+                        // Determine source match indices for both teams
+                        let teamASourceIdx = -1;
+                        let teamBSourceIdx = -1;
+                        
+                        qfMatches.forEach((qfMatch, qfIdx) => {
+                            if (qfMatch.winner?.name === teamAName) {
+                                teamASourceIdx = qfIdx;
+                            }
+                            if (qfMatch.winner?.name === teamBName) {
+                                teamBSourceIdx = qfIdx;
+                            }
+                        });
+                        
+                        // SIDE-LOCKING RULE: Team from left-most (lower index) QF goes on TOP
+                        if (teamASourceIdx !== -1 && teamBSourceIdx !== -1) {
+                            if (teamASourceIdx < teamBSourceIdx) {
+                                // Team A from left, goes on top
+                                firstTeamName = teamAName;
+                                secondTeamName = teamBName;
+                                firstScore = scoreA;
+                                secondScore = scoreB;
+                            } else {
+                                // Team B from left, goes on top
+                                firstTeamName = teamBName;
+                                secondTeamName = teamAName;
+                                firstScore = scoreB;
+                                secondScore = scoreA;
+                            }
+                        } else if (teamASourceIdx !== -1) {
+                            // Only team A has source, put it first
+                            firstTeamName = teamAName;
+                            secondTeamName = teamBName;
+                            firstScore = scoreA;
+                            secondScore = scoreB;
+                        } else if (teamBSourceIdx !== -1) {
+                            // Only team B has source, put it first
+                            firstTeamName = teamBName;
+                            secondTeamName = teamAName;
+                            firstScore = scoreB;
+                            secondScore = scoreA;
+                        } else {
+                            // No source found, keep original order
+                            firstTeamName = teamAName;
+                            secondTeamName = teamBName;
+                            firstScore = scoreA;
+                            secondScore = scoreB;
+                        }
+                    }
+                    
+                    const isQuarterFinal = group.stage === 'quarter_final';
+                    html += `
+                        <div class="pyramid-match-horizontal ${isQuarterFinal ? 'match-vertical' : ''}" data-match-id="${match.id}" data-position="${matchIdx}" data-stage="${group.stage}">
+                            ${isLive ? '<div class="match-live-dot"></div>' : ''}
+                            <div class="match-team-horizontal ${winnerName === firstTeamName ? 'team-winner' : ''}">
+                                <span class="team-name-horizontal">${firstTeamName}</span>
+                                ${isCompleted ? `<span class="team-score-horizontal">${firstScore}</span>` : ''}
+                            </div>
+                            <div class="match-vs-horizontal">vs</div>
+                            <div class="match-team-horizontal ${winnerName === secondTeamName ? 'team-winner' : ''}">
+                                <span class="team-name-horizontal">${secondTeamName}</span>
+                                ${isCompleted ? `<span class="team-score-horizontal">${secondScore}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+            });
+
+            html += '</div>';
+            
+            container.innerHTML = html;
+            
+            // Draw connector lines after rendering (bottom to top)
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    drawPyramidConnectors(container, reversedStages);
+                });
+            });
+        } catch (error) {
+            console.error('Error loading bracket:', error);
+            container.innerHTML = '<div class="text-slate-500 text-center py-6">Error loading bracket</div>';
+        }
+    }
+
+    function drawPyramidConnectors(container, reversedStages) {
+        const pyramid = container.querySelector('.bracket-pyramid');
+        if (!pyramid) return;
+
+        const existingSvg = pyramid.querySelector('.pyramid-svg-connectors');
+        if (existingSvg) {
+            existingSvg.remove();
+        }
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'pyramid-svg-connectors');
+        svg.setAttribute('width', pyramid.clientWidth);
+        svg.setAttribute('height', pyramid.clientHeight);
+        
+        const levels = container.querySelectorAll('.pyramid-level[data-stage]');
+        
+        // Draw lines from bottom level to top (reverse order)
+        for (let i = levels.length - 1; i > 0; i--) {
+            const currentLevel = levels[i];
+            const nextLevel = levels[i - 1];
+            
+            const currentMatches = currentLevel.querySelectorAll('.pyramid-match-horizontal');
+            const nextMatches = nextLevel.querySelectorAll('.pyramid-match-horizontal');
+            
+            // For each match in next level (upper), draw lines for each team to their source match
+            nextMatches.forEach((nextMatch, nextIdx) => {
+                // Get both teams in this next-level match
+                const teamElements = nextMatch.querySelectorAll('.match-team-horizontal');
+                if (teamElements.length < 2) return;
+                
+                teamElements.forEach((teamElement) => {
+                    const teamName = teamElement.querySelector('.team-name-horizontal')?.textContent.trim();
+                    if (!teamName) return;
+                    
+                    // Find which match in current level has this team as winner
+                    let sourceMatchIdx = -1;
+                    let sourceTeamPosition = null;
+                    
+                    currentMatches.forEach((currentMatch, currentIdx) => {
+                        // Check each team in the current match
+                        const currentTeamElements = currentMatch.querySelectorAll('.match-team-horizontal');
+                        currentTeamElements.forEach((currentTeam, teamIdx) => {
+                            const currentTeamName = currentTeam.querySelector('.team-name-horizontal')?.textContent.trim();
+                            const isWinner = currentTeam.classList.contains('team-winner');
+                            
+                            // Match if same team name and is winner
+                            if (currentTeamName === teamName && isWinner) {
+                                sourceMatchIdx = currentIdx;
+                                sourceTeamPosition = teamIdx; // 0 = first/top, 1 = second/bottom
+                            }
+                        });
+                    });
+                    
+                    // Draw line from source team position to this team in upper match
+                    if (sourceMatchIdx >= 0) {
+                        const sourceMatch = currentMatches[sourceMatchIdx];
+                        const sourceTeamElements = sourceMatch.querySelectorAll('.match-team-horizontal');
+                        
+                        if (sourceTeamPosition !== null && sourceTeamPosition < sourceTeamElements.length) {
+                            const sourceTeam = sourceTeamElements[sourceTeamPosition];
+                            const sourceRect = sourceTeam.getBoundingClientRect();
+                            const targetRect = teamElement.getBoundingClientRect();
+                            const containerRect = pyramid.getBoundingClientRect();
+                            
+                            // Straight line attachment points:
+                            // x1, y1: center-x of source team, UPPER boundary of source team
+                            // x2, y2: center-x of target team, LOWER boundary of target team
+                            const x1 = sourceRect.left - containerRect.left + sourceRect.width / 2;
+                            const y1 = sourceRect.top - containerRect.top; // Upper boundary
+                            const x2 = targetRect.left - containerRect.left + targetRect.width / 2;
+                            const y2 = targetRect.bottom - containerRect.top; // Lower boundary
+                            
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            // Straight line
+                            line.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+                            line.setAttribute('class', 'pyramid-connector-line');
+                            svg.appendChild(line);
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Draw line from Final to Champion
+        const finalLevel = container.querySelector('.pyramid-level[data-stage="final"]');
+        const championLevel = container.querySelector('.champion-level');
+        
+        if (finalLevel && championLevel) {
+            const finalMatch = finalLevel.querySelector('.pyramid-match-horizontal');
+            const champion = championLevel.querySelector('.pyramid-champion');
+            
+            if (finalMatch && champion) {
+                // Check if there's a winner in final
+                const winnerTeam = finalMatch.querySelector('.team-winner');
+                if (winnerTeam && champion.classList.contains('has-winner')) {
+                    const finalRect = finalMatch.getBoundingClientRect();
+                    const championRect = champion.getBoundingClientRect();
+                            const containerRect = pyramid.getBoundingClientRect();
+                    
+                    // Straight line from final match to champion
+                    const x1 = finalRect.left - containerRect.left + finalRect.width / 2;
+                    const y1 = finalRect.top - containerRect.top; // Upper boundary of final match
+                    const x2 = championRect.left - containerRect.left + championRect.width / 2;
+                    const y2 = championRect.bottom - containerRect.top; // Lower boundary of champion
+                    
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    // Straight line
+                    line.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+                    line.setAttribute('class', 'pyramid-connector-line champion-connector');
+                    svg.appendChild(line);
+                }
+            }
+        }
+        
+        pyramid.insertBefore(svg, pyramid.firstChild);
+    }
+
+    function fitBracketToContainer(container) {
+        const track = container.querySelector('.bracket-track');
+        if (!track) return;
+
+        track.style.transform = 'scale(1)';
+        track.style.transformOrigin = 'center center';
+    }
+
+    // Confetti effect
+    function triggerConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const confetti = [];
+        const colors = ['#00ffff', '#ff00ff', '#ffff00', '#ff0080', '#00ff80'];
+
+        for (let i = 0; i < 100; i++) {
+            confetti.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                r: Math.random() * 5 + 2,
+                d: Math.random() * 5 + 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.random() * 10 - 10
+            });
+        }
+
+        function drawConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            confetti.forEach((c, i) => {
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.r, 0, 2 * Math.PI);
+                ctx.fillStyle = c.color;
+                ctx.fill();
+                
+                c.y += c.d;
+                c.x += Math.sin(c.tilt);
+                
+                if (c.y > canvas.height) {
+                    confetti.splice(i, 1);
+                }
+            });
+
+            if (confetti.length > 0) {
+                requestAnimationFrame(drawConfetti);
+            }
+        }
+
+        drawConfetti();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        createParticles();
+        if (spotlights.length > 0) {
+            showSpotlight(0);
+            startSpotlightRotation();
+            
+            // Load all game data
+            spotlights.forEach(spotlight => {
+                const gameId = spotlight.getAttribute('data-game-id');
+                updateGameData(gameId);
+            });
+        }
+
+        // Initialize memories slideshow
+        if (memorySlide) {
+            startMemoryRotation();
+            // Refresh image list from server every 60 seconds (not every 8 seconds)
+            setInterval(refreshMemoryImages, 60000);
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (!currentSpotlightGameId) return;
+        const bracketDiv = document.getElementById(`tournament-bracket-${currentSpotlightGameId}`);
+        if (bracketDiv) {
+            fitBracketToContainer(bracketDiv);
+            drawPyramidConnectors(bracketDiv);
+        }
+    });
+</script>
+
+<style>
+    @keyframes float {
+        0%, 100% { transform: translateY(0) translateX(0); }
+        50% { transform: translateY(-20px) translateX(10px); }
+    }
+
+    .game-spotlight {
+        transition: opacity 700ms ease-in-out;
+        /* padding: 1%; */
+    }
+
+    .dashboard-card {
+        background: rgba(15, 23, 42, 0.78);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .summary-card {
+        padding: 10px 12px;
+        gap: 4px;
+    }
+
+    .dashboard-card-inner {
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        border-radius: 6px;
+        padding: 8px;
+    }
+
+    .bracket-stage {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    .bracket-track {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(200px, 1fr);
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .bracket-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 100%;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        background: linear-gradient(90deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.6));
+    }
+
+    .card-title {
+        font-size: 0.9rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #e2e8f0;
+    }
+
+    .card-kicker {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #94a3b8;
+        margin-bottom: 4px;
+    }
+
+    .card-value {
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: #f8fafc;
+    }
+
+    .section-title {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: #94a3b8;
+        margin-bottom: 6px;
+    }
+
+    .section-title-compact {
+        font-size: 0.62rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: #94a3b8;
+        margin-bottom: 4px;
+        padding: 0 4px;
+    }
+
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+    }
+
+    .rank-badge-compact {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        font-size: 0.6rem;
+        font-weight: 700;
+    }
+
+    .status-pill {
+        font-size: 0.62rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 2px 7px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+    }
+
+    .status-live {
+        background: rgba(244, 63, 94, 0.18);
+        color: #fda4af;
+        border-color: rgba(244, 63, 94, 0.35);
+    }
+
+    .status-upcoming {
+        background: rgba(56, 189, 248, 0.16);
+        color: #bae6fd;
+        border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .status-final {
+        background: rgba(52, 211, 153, 0.16);
+        color: #a7f3d0;
+        border-color: rgba(52, 211, 153, 0.35);
+    }
+
+    /* Tournament Pyramid Styles */
+    .bracket-pyramid {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto auto auto auto;
+        gap: 8px;
+        padding: 14px;
+        background: linear-gradient(180deg, rgba(9, 15, 30, 0.85), rgba(6, 10, 22, 0.9));
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.08), 0 12px 30px rgba(2, 6, 23, 0.35);
+        align-content: start;
+        overflow: hidden;
+    }
+
+    .pyramid-level {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 16px;
+        width: 100%;
+        min-height: 0;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 10px;
+        background: rgba(8, 14, 26, 0.55);
+        backdrop-filter: blur(8px);
+    }
+
+    .pyramid-level-title {
+        font-size: 0.64rem;
+        font-weight: 700;
+        color: #7dd3fc;
+        letter-spacing: 0.16em;
+        text-align: left;
+        padding: 8px 10px;
+        border-right: 2px solid rgba(6, 182, 212, 0.35);
+        writing-mode: horizontal-tb;
+        white-space: nowrap;
+        min-width: 130px;
+        text-transform: uppercase;
+        border-radius: 8px;
+        box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.16);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pyramid-level[data-stage="quarter_final"] .pyramid-level-title::before {
+        content: "⟐";
+        color: #38bdf8;
+        font-size: 0.75rem;
+    }
+
+    .pyramid-level[data-stage="semi_final"] .pyramid-level-title::before {
+        content: "✶";
+        color: #22d3ee;
+        font-size: 0.75rem;
+    }
+
+    .pyramid-level[data-stage="final"] .pyramid-level-title::before {
+        content: "✦";
+        color: #60a5fa;
+        font-size: 0.75rem;
+    }
+
+    .champion-level .pyramid-level-title::before {
+        content: "🏆";
+        font-size: 0.75rem;
+    }
+
+    .pyramid-matches {
+        display: grid;
+        grid-template-rows: 1fr;
+        gap: 12px;
+        width: 100%;
+        justify-items: center;
+        align-items: center;
+        height: 100%;
+        margin: 0 auto;
+    }
+
+    /* Grid layouts for different stages */
+    .champion-level {
+        grid-row: 1;
+    }
+
+    .champion-level .pyramid-matches {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        max-width: 420px;
+    }
+
+    .pyramid-level[data-stage="final"] {
+        grid-row: 2;
+    }
+
+    .pyramid-level[data-stage="final"] .pyramid-matches {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        max-width: 520px;
+    }
+
+    .pyramid-level[data-stage="semi_final"] {
+        grid-row: 3;
+    }
+
+    .pyramid-level[data-stage="semi_final"] .pyramid-matches {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 840px;
+    }
+
+    .pyramid-level[data-stage="quarter_final"] {
+        grid-row: 4;
+    }
+
+    .pyramid-level[data-stage="quarter_final"] .pyramid-matches {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 1200px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1200px) {
+        .pyramid-level[data-stage="quarter_final"] .pyramid-matches {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .pyramid-level[data-stage="semi_final"] .pyramid-matches,
+        .pyramid-level[data-stage="quarter_final"] .pyramid-matches {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .pyramid-match-horizontal {
+        position: relative;
+        background: linear-gradient(135deg, rgba(12, 18, 32, 0.8), rgba(4, 8, 20, 0.85));
+        border: 1px solid rgba(34, 211, 238, 0.35);
+        border-radius: 10px;
+        padding: 8px 10px;
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 10px 20px rgba(2, 6, 23, 0.35);
+        backdrop-filter: blur(10px);
+    }
+
+    .pyramid-match-horizontal:hover {
+        border-color: rgba(34, 211, 238, 0.7);
+        box-shadow: 0 12px 24px rgba(34, 211, 238, 0.2);
+        transform: translateY(-2px);
+    }
+
+    /* Quarter Final: stack teams vertically inside each match */
+    .pyramid-level[data-stage="quarter_final"] .pyramid-match-horizontal.match-vertical {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        padding: 8px 10px;
+    }
+
+    .pyramid-level[data-stage="quarter_final"] .pyramid-match-horizontal.match-vertical .match-vs-horizontal {
+        text-align: center;
+        padding: 0;
+    }
+
+    .pyramid-level[data-stage="quarter_final"] .pyramid-match-horizontal.match-vertical .match-team-horizontal {
+        width: 100%;
+    }
+
+    .match-team-horizontal {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-size: 0.72rem;
+        color: #cbd5e1;
+        flex: 1;
+        transition: all 0.2s ease;
+    }
+
+    .match-team-horizontal.team-winner {
+        background: linear-gradient(90deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.15));
+        color: #fde68a;
+        border-left: 3px solid #fbbf24;
+        box-shadow: 0 0 14px rgba(251, 191, 36, 0.25);
+        position: relative;
+    }
+
+    .match-team-horizontal.team-winner::after {
+        content: "🏆";
+        font-size: 0.7rem;
+        margin-left: 6px;
+        opacity: 0.9;
+    }
+
+    .team-name-horizontal {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .team-score-horizontal {
+        font-weight: 700;
+        font-size: 0.8rem;
+        min-width: 20px;
+        text-align: center;
+    }
+
+    .match-vs-horizontal {
+        font-size: 0.6rem;
+        color: #a7b4c6;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: rgba(8, 14, 26, 0.85);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .match-live-dot {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 8px;
+        height: 8px;
+        background: #f43f5e;
+        border-radius: 50%;
+        animation: pulse-dot 1.5s infinite;
+        box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+    }
+
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    /* Champion Level */
+    .champion-level {
+        grid-row: 1;
+        justify-items: center;
+    }
+
+    .champion-level .pyramid-matches {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        justify-self: center;
+        max-width: 520px;
+        width: auto;
+    }
+
+    .champion-level .pyramid-level-title {
+        border-right: none;
+        justify-self: center;
+    }
+
+    .pyramid-champion {
+        position: relative;
+        background: linear-gradient(135deg, rgba(12, 18, 32, 0.9), rgba(4, 8, 20, 0.95));
+        border: 1px solid rgba(34, 211, 238, 0.45);
+        border-radius: 12px;
+        padding: 8px 10px;
+        width: fit-content;
+        max-width: 520px;
+        min-width: 220px;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .pyramid-champion.has-winner {
+        background: linear-gradient(90deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.18));
+        border-color: rgba(251, 191, 36, 0.9);
+        border-left: 3px solid #fbbf24;
+        box-shadow: 0 0 22px rgba(251, 191, 36, 0.35);
+    }
+
+    .champion-trophy {
+        font-size: 0.72rem;
+        line-height: 1;
+    }
+
+    .champion-name {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #cbd5e1;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pyramid-champion.has-winner .champion-name {
+        color: #fcd34d;
+    }
+
+    /* SVG Connectors */
+    .pyramid-svg-connectors {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    .pyramid-connector-line {
+        stroke: rgba(6, 182, 212, 0.35);
+        stroke-width: 1.8;
+        fill: none;
+        stroke-linecap: round;
+        filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.25));
+    }
+
+    .pyramid-connector-line.champion-connector {
+        stroke: rgba(251, 191, 36, 0.6);
+        stroke-width: 2.2;
+        filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.35));
+    }
+
+    @media (max-width: 900px) {
+        .pyramid-svg-connectors {
+            display: none;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        #floating-memories {
+            position: relative;
+            width: 100%;
+            padding-left: 0;
+            margin-top: 0.75rem;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .bracket-pyramid {
+            overflow-x: hidden;
+            overflow-y: visible;
+            padding: 12px;
+        }
+
+        .pyramid-level {
+            min-width: 0;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .pyramid-level-title {
+            min-width: 0;
+            width: 100%;
+            border-right: none;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.35);
+            justify-content: center;
+            text-align: center;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .pyramid-match-horizontal {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 6px;
+        }
+
+        .match-vs-horizontal {
+            align-self: center;
+        }
+    }
+
+    .spotlight-card-fixed {
+        height: 100%;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+
+</style>
+{% endblock %}

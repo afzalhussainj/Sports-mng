@@ -1,0 +1,488 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Manage Teams & Members - Admin{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-64 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">ADMIN</h2>
+            <p class="text-cyan-500 text-xs">Teams & Members</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="{% url 'manage_games' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎮 Games</a>
+            <a href="{% url 'manage_teams_members' %}" class="block px-4 py-2 bg-cyan-900/30 rounded text-cyan-300">👥 Teams & Members</a>
+            <a href="{% url 'manage_matches' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🏆 Matches</a>
+            <a href="{% url 'manage_awards' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">⭐ Awards</a>
+            <a href="{% url 'manage_score_managers' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">📊 Score Managers</a>
+            <a href="{% url 'randomizer_panel' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎲 Randomizer</a>
+            <a href="{% url 'upload_photo' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">📸 Upload Memories</a>
+        </nav>
+        <div class="border-t border-cyan-700 p-4">
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">TEAMS & MEMBERS MANAGEMENT</h1>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8 space-y-8">
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                <div id="message-container">
+                    {% for message in messages %}
+                        <div class="message-alert bg-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-900/30 border border-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-500 text-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-300 px-4 py-3 rounded relative mb-3 transition-opacity duration-500">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <!-- Create New Team with Members -->
+            <div class="sci-fi-card p-5">
+                <button type="button" class="w-full flex justify-between items-center text-magenta-400 font-bold text-base hover:text-magenta-300 transition" onclick="toggleCreateForm()">
+                    <span class="flex items-center gap-2">
+                        <span class="text-xl">➕</span>
+                        <span>CREATE NEW TEAM WITH MEMBERS</span>
+                    </span>
+                    <span id="create-toggle-icon" class="text-cyan-400">▼</span>
+                </button>
+                
+                <div id="create-team-form" style="display: none;" class="mt-4 pt-4 border-t border-cyan-700/50">
+                    <form method="post" action="{% url 'manage_teams_members' %}" class="space-y-5">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="team_with_members">
+                        
+                        <!-- Team Information -->
+                        <div class="bg-gray-800/50 p-4 rounded-lg border border-cyan-700/70">
+                            <h4 class="text-cyan-400 font-semibold text-sm uppercase tracking-wide mb-4 flex items-center gap-2">
+                                <span>🎯</span>
+                                <span>Team Information</span>
+                            </h4>
+                            {% if team_form.non_field_errors %}
+                                <div class="text-red-400 text-sm mb-3 p-2 bg-red-900/20 rounded">{{ team_form.non_field_errors }}</div>
+                            {% endif %}
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Team Name -->
+                                <div>
+                                    <label class="text-cyan-400 font-semibold text-xs uppercase tracking-wide block mb-2">
+                                        Team Name <span class="text-red-400">*</span>
+                                    </label>
+                                    {{ team_form.name }}
+                                    {% if team_form.name.errors %}
+                                        <div class="text-red-400 text-xs mt-1.5">{{ team_form.name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Game Selection -->
+                                <div>
+                                    <label class="text-cyan-400 font-semibold text-xs uppercase tracking-wide block mb-2">
+                                        Game <span class="text-red-400">*</span>
+                                    </label>
+                                    {{ team_form.game }}
+                                    {% if team_form.game.errors %}
+                                        <div class="text-red-400 text-xs mt-1.5">{{ team_form.game.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Captain Name - Full Width -->
+                            <div class="mt-4">
+                                <label class="text-cyan-400 font-semibold text-xs uppercase tracking-wide block mb-2">
+                                    Captain Name <span class="text-red-400">*</span>
+                                </label>
+                                {{ team_form.captain_name }}
+                                {% if team_form.captain_name.errors %}
+                                    <div class="text-red-400 text-xs mt-1.5">{{ team_form.captain_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Members Section -->
+                        <div class="bg-gray-800/50 p-4 rounded-lg border border-cyan-700/70">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-cyan-400 font-semibold text-sm uppercase tracking-wide flex items-center gap-2">
+                                    <span>👥</span>
+                                    <span>Team Members</span>
+                                    <span class="text-cyan-500/70 text-xs normal-case font-normal">(Optional)</span>
+                                </h4>
+                                <button type="button" id="add-member-btn" class="sci-fi-button text-xs bg-cyan-900 hover:bg-cyan-800 px-3 py-1.5">
+                                    ➕ ADD MEMBER
+                                </button>
+                            </div>
+                            <p class="text-cyan-500/70 text-xs mb-3">Add additional team members. All will be assigned as regular members.</p>
+                            
+                            {{ formset.management_form }}
+                            
+                            <div id="member-forms" class="space-y-2">
+                                {% for form in formset %}
+                                    <div class="member-form-box p-3 bg-gray-900/60 rounded border border-cyan-700/50">
+                                        {% if form.non_field_errors %}
+                                            <div class="text-red-400 text-sm mb-2">{{ form.non_field_errors }}</div>
+                                        {% endif %}
+                                        
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex-1">
+                                                {{ form.name }}
+                                                {% if form.name.errors %}
+                                                    <div class="text-red-400 text-xs mt-1">{{ form.name.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <button type="button" class="remove-member-btn text-red-400 hover:text-red-300 hover:bg-red-900/30 p-2 rounded transition" title="Remove member">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Hidden fields -->
+                                        {{ form.id }}
+                                        {{ form.team }}
+                                        {{ form.role }}
+                                        {{ form.DELETE }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Hidden template for new forms -->
+                            <div id="member-form-template" style="display: none;">
+                                <div class="member-form-box p-3 bg-gray-900/60 rounded border border-cyan-700/50">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-1">
+                                            <input type="text" name="members-__prefix__-name" class="w-full px-3 py-2 bg-gray-800 border border-cyan-600 text-cyan-300 rounded-md text-sm focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20" placeholder="Member name">
+                                        </div>
+                                        <button type="button" class="remove-member-btn text-red-400 hover:text-red-300 hover:bg-red-900/30 p-2 rounded transition" title="Remove member">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <!-- Hidden fields -->
+                                    <input type="hidden" name="members-__prefix__-id" id="id_members-__prefix__-id">
+                                    <input type="hidden" name="members-__prefix__-team" id="id_members-__prefix__-team">
+                                    <select name="members-__prefix__-role" id="id_members-__prefix__-role" style="display:none;">
+                                        <option value="member" selected>Member</option>
+                                        <option value="captain">Captain</option>
+                                    </select>
+                                    <input type="checkbox" name="members-__prefix__-DELETE" id="id_members-__prefix__-DELETE" style="display:none;">
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <button type="submit" class="sci-fi-button w-full bg-magenta-900 hover:bg-magenta-800">
+                            <span class="flex items-center justify-center gap-2">
+                                <span>✓</span>
+                                <span>CREATE TEAM WITH MEMBERS</span>
+                            </span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Teams List -->
+            <div class="sci-fi-card p-5">
+                <h3 class="text-magenta-400 font-bold text-base mb-5 flex items-center gap-2">
+                    <span>📋</span>
+                    <span>TEAMS</span>
+                </h3>
+                {% if teams %}
+                    {% regroup teams by game.name as teams_by_game_name %}
+                    <div class="space-y-3">
+                        {% for game_group in teams_by_game_name %}
+                            <div class="border border-cyan-700/70 rounded-lg overflow-hidden bg-gray-800/30">
+                                <button type="button" class="w-full flex justify-between items-center bg-cyan-900/20 hover:bg-cyan-900/40 px-4 py-3 text-cyan-300 font-semibold transition group" onclick="toggleGame('game-{{ game_group.grouper|slugify }}')">
+                                    <span class="flex items-center gap-2 text-sm">
+                                        <span>🎮</span>
+                                        <span>{{ game_group.grouper }}</span>
+                                        <span class="text-xs text-cyan-500/70 font-normal">({{ game_group.list|length }} team{{ game_group.list|length|pluralize }})</span>
+                                    </span>
+                                    <span class="game-toggle-icon text-cyan-400 group-hover:text-cyan-300 transition">▼</span>
+                                </button>
+                                
+                                <div id="game-{{ game_group.grouper|slugify }}" class="game-teams" style="display: none;">
+                                    {% for team in game_group.list %}
+                                        <div class="bg-gray-900/60 border-t border-cyan-700/50 px-4 py-3">
+                                            <!-- Team Header -->
+                                            <div class="flex justify-between items-center mb-3">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-bold text-cyan-300">{{ team.name }}</span>
+                                                        <span class="text-xs px-2 py-0.5 rounded bg-cyan-900/30 text-cyan-400">
+                                                            {{ team.get_members.count }} member{{ team.get_members.count|pluralize }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-xs text-cyan-500/70 mt-1 flex items-center gap-1">
+                                                        <span>⭐</span>
+                                                        <span>{{ team.get_captain.name|default:"No captain assigned" }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <a href="{% url 'edit_team' team.id %}" class="sci-fi-button text-xs px-3 py-1.5 hover:bg-cyan-900">EDIT</a>
+                                                    <button type="button" class="sci-fi-button text-xs px-3 py-1.5 bg-red-900 hover:bg-red-800 transition" onclick="deleteTeam({{ team.id }}, '{{ team.name }}')">DELETE</button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Team Members -->
+                                            {% if team.get_members %}
+                                                <div class="mt-3 pt-3 border-t border-cyan-700/30">
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        {% for member in team.get_members %}
+                                                            <div class="flex justify-between items-center bg-gray-800/60 px-3 py-2 rounded-md text-sm group/member hover:bg-gray-800 transition">
+                                                                <div class="flex items-center gap-2 flex-1 min-w-0">
+                                                                    <span class="text-cyan-300 truncate">{{ member.name }}</span>
+                                                                    {% if member.is_captain %}
+                                                                        <span class="text-yellow-400 text-xs">⭐</span>
+                                                                    {% else %}
+                                                                        <span class="text-cyan-600 text-xs">👤</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <a href="{% url 'edit_member' member.id %}" class="text-cyan-400 hover:text-cyan-300 text-xs opacity-0 group-hover/member:opacity-100 transition whitespace-nowrap ml-2">EDIT</a>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 bg-gray-800/20 rounded-lg border border-cyan-700/30">
+                        <p class="text-cyan-600 text-sm">No teams created yet</p>
+                        <p class="text-cyan-700/70 text-xs mt-2">Create one using the form above</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sci-fi-card p {
+        margin: 1rem 0;
+    }
+    
+    .sci-fi-card label {
+        user-select: none;
+    }
+    
+    .sci-fi-card input[type="text"], 
+    .sci-fi-card input[type="number"], 
+    .sci-fi-card select, 
+    .sci-fi-card textarea {
+        width: 100%;
+        padding: 0.625rem 0.75rem;
+        background: #1e293b;
+        border: 1px solid #0e7490;
+        color: #06b6d4;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sci-fi-card input:focus, 
+    .sci-fi-card select:focus, 
+    .sci-fi-card textarea:focus {
+        outline: none;
+        border-color: #06b6d4;
+        background: #0f172a;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+    }
+    
+    .sci-fi-card input::placeholder {
+        color: #0891b2;
+        opacity: 0.6;
+    }
+        border-color: #06b6d4;
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+    }
+    
+    /* Formset styling */
+    .sci-fi-card input[type="hidden"] {
+        width: auto;
+        padding: 0;
+        border: none;
+        background: none;
+    }
+    
+    .sci-fi-card .helptext {
+        display: none;
+    }
+</style>
+
+<script>
+// Toggle create team form
+function toggleCreateForm() {
+    const form = document.getElementById('create-team-form');
+    const icon = document.getElementById('create-toggle-icon');
+    
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        icon.textContent = '▲';
+    } else {
+        form.style.display = 'none';
+        icon.textContent = '▼';
+    }
+}
+
+// Toggle game teams
+function toggleGame(gameId) {
+    const gameTeams = document.getElementById(gameId);
+    const button = event.target.closest('button');
+    const icon = button.querySelector('.game-toggle-icon');
+    
+    if (gameTeams.style.display === 'none') {
+        gameTeams.style.display = 'block';
+        icon.textContent = '▲';
+    } else {
+        gameTeams.style.display = 'none';
+        icon.textContent = '▼';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const memberFormsContainer = document.getElementById('member-forms');
+    const addMemberBtn = document.getElementById('add-member-btn');
+    const totalFormsInput = document.querySelector('input[name="members-TOTAL_FORMS"]');
+    const formTemplate = document.getElementById('member-form-template');
+    const gameSelect = document.querySelector('select[name="game"]');
+    
+    // Store all game sections for filtering
+    const allGameSections = {};
+    document.querySelectorAll('.game-teams').forEach(section => {
+        const gameId = section.id.replace('game-', '');
+        allGameSections[gameId] = section;
+    });
+    
+    // Filter teams based on selected game
+    function filterTeamsByGame() {
+        if (!gameSelect) return;
+        
+        const selectedGameId = gameSelect.value;
+        const teamsContainer = document.querySelector('[id^="game-"]')?.parentElement?.parentElement;
+        
+        // Show/hide all game sections
+        document.querySelectorAll('button[onclick*="toggleGame"]').forEach(button => {
+            const gameSection = button.nextElementSibling;
+            if (gameSection && gameSection.classList.contains('game-teams')) {
+                const sectionGameId = gameSection.id.replace('game-', '');
+                
+                // If a game is selected in form, only show that game's teams
+                if (selectedGameId) {
+                    button.parentElement.style.display = sectionGameId === selectedGameId ? 'block' : 'none';
+                    // Auto-expand the selected game
+                    if (sectionGameId === selectedGameId) {
+                        gameSection.style.display = 'block';
+                        button.querySelector('.game-toggle-icon').textContent = '▲';
+                    }
+                } else {
+                    button.parentElement.style.display = 'block';
+                }
+            }
+        });
+    }
+    
+    // Add game change listener
+    if (gameSelect) {
+        gameSelect.addEventListener('change', filterTeamsByGame);
+        // Apply filtering on initial load if game is pre-selected
+        if (gameSelect.value) {
+            filterTeamsByGame();
+        }
+    }
+    
+    // Remove member functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-member-btn')) {
+            const memberBox = e.target.closest('.member-form-box');
+            const deleteCheckbox = memberBox.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            
+            if (deleteCheckbox) {
+                // Mark for deletion and hide
+                deleteCheckbox.checked = true;
+                memberBox.style.display = 'none';
+            }
+        }
+    });
+    
+    // Add member functionality
+    if (addMemberBtn) {
+        addMemberBtn.addEventListener('click', function() {
+            const totalForms = parseInt(totalFormsInput.value);
+            const newFormIndex = totalForms;
+            
+            // Clone the template
+            const newForm = formTemplate.cloneNode(true);
+            newForm.style.display = '';
+            newForm.id = '';
+            
+            // Update form index in all fields
+            newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, newFormIndex);
+            
+            // Get the actual form box
+            const formBox = newForm.querySelector('.member-form-box');
+            
+            // Add to container
+            memberFormsContainer.appendChild(formBox);
+            
+            // Update total forms count
+            totalFormsInput.value = totalForms + 1;
+        });
+    }
+    
+    // Set all member roles to 'member' (not captain) on page load
+    document.querySelectorAll('select[name$="-role"]').forEach(function(roleSelect) {
+        roleSelect.value = 'member';
+    });
+});
+
+// Delete team function
+function deleteTeam(teamId, teamName) {
+    const confirmDelete = confirm(`Are you sure you want to delete the team "${teamName}"?\n\nThis will permanently delete:\n• All team members\n• All scheduled matches for this team\n\nThis action cannot be undone!`);
+    
+    if (confirmDelete) {
+        // Create a form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/manager/teams/${teamId}/delete/`;
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken.value;
+            form.appendChild(csrfInput);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Auto-hide messages after 4 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const messageContainer = document.getElementById('message-container');
+    if (messageContainer) {
+        setTimeout(function() {
+            const messages = messageContainer.querySelectorAll('.message-alert');
+            messages.forEach(function(message) {
+                message.style.opacity = '0';
+            });
+            setTimeout(function() {
+                messageContainer.remove();
+            }, 500);
+        }, 4000);
+    }
+});
+</script>
+{% endblock %}

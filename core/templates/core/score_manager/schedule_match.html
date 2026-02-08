@@ -1,0 +1,203 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Schedule Match - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-80 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">SCORE MANAGER</h2>
+            <p class="text-cyan-500 text-xs mt-1">{{ user.username }}</p>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-2">
+            <h3 class="text-magenta-400 font-bold text-sm mb-3">ASSIGNED GAMES:</h3>
+            <a href="{% url 'score_manager_panel' %}" class="block px-4 py-3 rounded border border-cyan-700 text-cyan-300 hover:bg-cyan-900/30 transition">
+                <div class="font-bold">← Back to Panel</div>
+            </a>
+        </div>
+
+        <div class="border-t border-cyan-700 p-4">
+            <a href="{% url 'public_dashboard' %}" class="sci-fi-button text-xs w-full block text-center">← DASHBOARD</a>
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center mt-2">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">SCHEDULE MATCH - {{ game.name }}</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="max-w-2xl">
+                <!-- Form -->
+                <div class="sci-fi-card p-6 mb-6">
+                    <h2 class="text-cyan-400 font-bold text-lg mb-4">New Match Details</h2>
+                    
+                    <form method="POST" class="space-y-4">
+                        {% csrf_token %}
+
+                        <!-- Teams Selection -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-cyan-400 font-bold text-sm mb-2">{{ form.team_a.label }} *</label>
+                                {{ form.team_a }}
+                                {% if form.team_a.errors %}
+                                    <p class="text-red-400 text-xs mt-1">{{ form.team_a.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-cyan-400 font-bold text-sm mb-2">{{ form.team_b.label }} *</label>
+                                {{ form.team_b }}
+                                {% if form.team_b.errors %}
+                                    <p class="text-red-400 text-xs mt-1">{{ form.team_b.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Schedule Time -->
+                        <div>
+                            <label class="block text-cyan-400 font-bold text-sm mb-2">{{ form.scheduled_at.label }} *</label>
+                            {{ form.scheduled_at }}
+                            {% if form.scheduled_at.errors %}
+                                <p class="text-red-400 text-xs mt-1">{{ form.scheduled_at.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Location -->
+                        <div>
+                            <label class="block text-cyan-400 font-bold text-sm mb-2">{{ form.location.label }}</label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <p class="text-red-400 text-xs mt-1">{{ form.location.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Match Stage (Optional) -->
+                        <div>
+                            <label class="block text-cyan-400 font-bold text-sm mb-2">{{ form.match_stage.label }} <span class="text-cyan-600 text-xs">(Optional - for Quarter/Semi/Finals)</span></label>
+                            {{ form.match_stage }}
+                            {% if form.match_stage.errors %}
+                                <p class="text-red-400 text-xs mt-1">{{ form.match_stage.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Winner Selection -->
+                        <div>
+                            <label class="block text-cyan-400 font-bold text-sm mb-2">{{ form.winner_team.label }} <span class="text-cyan-600 text-xs">(Optional)</span></label>
+                            {{ form.winner_team }}
+                            {% if form.winner_team.errors %}
+                                <p class="text-red-400 text-xs mt-1">{{ form.winner_team.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notes -->
+                        <div>
+                            <label class="block text-cyan-400 font-bold text-sm mb-2">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <p class="text-red-400 text-xs mt-1">{{ form.notes.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Form Errors -->
+                        {% if form.non_field_errors %}
+                            <div class="bg-red-900/30 border-l-2 border-red-500 p-4 rounded">
+                                {% for error in form.non_field_errors %}
+                                    <p class="text-red-400">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Submit Buttons -->
+                        <div class="flex gap-3 pt-6">
+                            <button type="submit" class="sci-fi-button flex-1 font-bold">SCHEDULE MATCH</button>
+                            <a href="{% url 'score_manager_game_detail' game.id %}" class="sci-fi-button flex-1 font-bold text-center bg-cyan-900">CANCEL</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Game Info -->
+                <div class="sci-fi-card p-4 text-sm text-cyan-500">
+                    <p class="font-bold text-cyan-400 mb-2">Game Information</p>
+                    <p>Game: {{ game.name }}</p>
+                    <p>Status: {% if game.completed %}✅ Completed{% else %}📝 Active{% endif %}</p>
+                    <p class="text-xs mt-2 text-cyan-600">Scheduled time should be in the future. You can select any teams assigned to this game.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input, select, textarea {
+        display: block;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const teamASelect = document.getElementById('id_team_a');
+        const teamBSelect = document.getElementById('id_team_b');
+        const winnerSelect = document.getElementById('id_winner_team');
+        
+        // Check if winner select exists
+        if (!winnerSelect) return;
+        
+        // Store all original winner options
+        const allWinnerOptions = Array.from(winnerSelect.options).map(option => ({
+            value: option.value,
+            text: option.text
+        }));
+        
+        function updateWinnerDropdown() {
+            const teamAId = String(teamASelect.value).trim();
+            const teamBId = String(teamBSelect.value).trim();
+            const currentValue = winnerSelect.value;
+            
+            // Clear and rebuild options
+            winnerSelect.innerHTML = '';
+            
+            // Always add the empty option first
+            if (allWinnerOptions.length > 0 && !allWinnerOptions[0].value) {
+                const emptyOption = new Option(allWinnerOptions[0].text, allWinnerOptions[0].value);
+                winnerSelect.add(emptyOption);
+            }
+            
+            // If both teams are selected, only add those two to winner dropdown
+            if (teamAId && teamBId && teamAId !== '' && teamBId !== '') {
+                allWinnerOptions.forEach(option => {
+                    if (!option.value) return; // Skip empty option, already added
+                    if (String(option.value).trim() === teamAId || String(option.value).trim() === teamBId) {
+                        const newOption = new Option(option.text, option.value);
+                        winnerSelect.add(newOption);
+                    }
+                });
+            } else {
+                // Show all original options
+                allWinnerOptions.forEach((option, idx) => {
+                    if (idx === 0) return; // Skip empty option, already added
+                    const newOption = new Option(option.text, option.value);
+                    winnerSelect.add(newOption);
+                });
+            }
+            
+            // Restore previous value if it's still available
+            if (Array.from(winnerSelect.options).some(opt => opt.value === currentValue)) {
+                winnerSelect.value = currentValue;
+            } else {
+                winnerSelect.value = '';
+            }
+        }
+        
+        // Add event listeners
+        teamASelect.addEventListener('change', updateWinnerDropdown);
+        teamBSelect.addEventListener('change', updateWinnerDropdown);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Edit Award - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="sci-fi-card p-6 mb-6">
+            <h2 class="text-cyan-400 font-bold text-2xl mb-2">EDIT AWARD</h2>
+            <p class="text-cyan-600">Update award details</p>
+        </div>
+
+        <div class="sci-fi-card p-6">
+            <form method="post">
+                {% csrf_token %}
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Game</label>
+                        {{ form.game }}
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Award Label</label>
+                        {{ form.award_label }}
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Team</label>
+                        {{ form.team }}
+                    </div>
+                    <div>
+                        <label class="block text-cyan-300 font-bold mb-2">Member (Optional)</label>
+                        {{ form.member }}
+                    </div>
+                </div>
+
+                <div class="flex gap-4 mt-8">
+                    <button type="submit" class="sci-fi-button bg-cyan-900 hover:bg-cyan-800 px-6 py-3">💾 SAVE</button>
+                    <a href="{% url 'manage_awards' %}" class="sci-fi-button bg-gray-700 hover:bg-gray-600 px-6 py-3">← CANCEL</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

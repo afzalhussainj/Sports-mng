@@ -1,0 +1,123 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}{{ game.name }} - Score Manager{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-80 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">{{ game.name }}</h2>
+            <p class="text-xs mt-1 {% if game.completed %}text-green-400{% else %}text-cyan-500{% endif %}">
+                Status: {% if game.completed %}✅ Completed (Locked){% else %}📝 Active{% endif %}
+            </p>
+            {% if game.completed %}
+                <p class="text-yellow-400 text-xs mt-2">⚠️ This game is locked. No edits allowed.</p>
+            {% endif %}
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+            <h3 class="text-magenta-400 font-bold text-sm">MATCHES</h3>
+            {% for match in matches %}
+                <div class="bg-gray-900 border border-cyan-700 p-3 rounded">
+                    <div class="font-bold text-cyan-300 text-sm">{{ match.team_a.name }} vs {{ match.team_b.name }}</div>
+                    <div class="text-xs text-cyan-500 mt-1">{{ match.scheduled_at }}</div>
+                    {% if match.match_stage %}
+                        <div class="text-xs text-yellow-400 mt-1">🏁 {{ match.get_match_stage_display }}</div>
+                    {% endif %}
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="bg-gray-800 px-2 py-1 rounded text-xs font-bold">{{ match.score_a }}-{{ match.score_b }}</span>
+                        <span class="text-xs px-2 py-1 rounded bg-gray-700 text-cyan-400">{{ match.get_status_display }}</span>
+                    </div>
+                    {% if not game.completed and match.status != 'completed' %}
+                        <a href="{% url 'score_manager_update_match' match.id %}" class="sci-fi-button text-xs w-full block text-center mt-2">UPDATE SCORE</a>
+                    {% elif game.completed %}
+                        <div class="text-xs text-yellow-400 mt-2">🔒 GAME LOCKED</div>
+                    {% else %}
+                        <div class="text-xs text-green-400 mt-2">✓ COMPLETED</div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p class="text-cyan-600 text-sm">No matches scheduled</p>
+            {% endfor %}
+        </div>
+
+        <div class="border-t border-cyan-700 p-4 space-y-2">
+            {% if not game.completed %}
+                <form method="post" action="{% url 'toggle_game_completed' game.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="sci-fi-button text-xs w-full bg-green-900">✓ MARK AS COMPLETE</button>
+                </form>
+            {% endif %}
+            <a href="{% url 'score_manager_panel' %}" class="sci-fi-button text-xs w-full block text-center">← BACK</a>
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center bg-red-900">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">SCORE MANAGER - {{ game.name }}</h1>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="sci-fi-card p-6 mb-6">
+                <h3 class="text-magenta-400 font-bold text-lg mb-4">LEADERBOARD</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b border-cyan-700">
+                            <tr>
+                                <th class="text-left py-2 text-cyan-400">Team</th>
+                                <th class="text-center py-2 text-cyan-400">Points</th>
+                                <th class="text-center py-2 text-cyan-400">Wins</th>
+                                <th class="text-center py-2 text-cyan-400">Losses</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Will be populated by JavaScript from API -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="text-cyan-600 text-sm">
+                <p>Select a match from the sidebar to update scores.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load leaderboard on page load
+    async function loadLeaderboard() {
+        const gameId = {{ game.id }};
+        try {
+            const response = await fetch(`/api/games/${gameId}/leaderboard/`);
+            const data = await response.json();
+            
+            const tbody = document.querySelector('table tbody');
+            tbody.innerHTML = data.leaderboard
+                .map(entry => `
+                    <tr class="border-b border-cyan-700 hover:bg-cyan-900/20">
+                        <td class="py-2 text-cyan-300">${entry.team}</td>
+                        <td class="text-center font-bold text-yellow-400">${entry.points}</td>
+                        <td class="text-center text-green-400">${entry.wins}</td>
+                        <td class="text-center text-red-400">${entry.losses}</td>
+                    </tr>
+                `)
+                .join('');
+        } catch (error) {
+            console.error('Error loading leaderboard:', error);
+        }
+    }
+
+    loadLeaderboard();
+
+    // Refresh leaderboard every 10 seconds
+    setInterval(loadLeaderboard, 10000);
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Manage Members - Admin{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-64 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">ADMIN</h2>
+            <p class="text-cyan-500 text-xs">Members Management</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="{% url 'manage_games' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎮 Games</a>
+            <a href="{% url 'manage_teams' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">👥 Teams</a>
+            <a href="{% url 'manage_members' %}" class="block px-4 py-2 bg-cyan-900/30 rounded text-cyan-300">👤 Members</a>
+            <a href="{% url 'manage_matches' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🏆 Matches</a>
+            <a href="{% url 'manage_awards' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">⭐ Awards</a>
+        </nav>
+        <div class="border-t border-cyan-700 p-4">
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">MANAGE TEAM MEMBERS</h1>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8">
+            <!-- Add New Member Form -->
+            <div class="sci-fi-card p-6 mb-8">
+                <h3 class="text-magenta-400 font-bold text-lg mb-4">➕ ADD MEMBER</h3>
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="sci-fi-button">ADD MEMBER</button>
+                </form>
+            </div>
+
+            <!-- Members List -->
+            <div class="sci-fi-card p-6">
+                <h3 class="text-magenta-400 font-bold text-lg mb-4">📋 MEMBERS</h3>
+                {% if members %}
+                    <div class="space-y-3">
+                        {% for member in members %}
+                            <div class="bg-gray-900 border border-cyan-700 p-4 rounded">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <div class="font-bold text-cyan-300">{{ member.name }}</div>
+                                        <div class="text-sm text-cyan-500">Team: {{ member.team.name }} | Role: {{ member.get_role_display }}</div>
+                                    </div>
+                                    <a href="{% url 'edit_member' member.id %}" class="sci-fi-button text-xs">EDIT</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-cyan-600">No members added yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sci-fi-card p {
+        margin: 1rem 0;
+    }
+    .sci-fi-card label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #06b6d4;
+        font-weight: bold;
+    }
+    .sci-fi-card input, .sci-fi-card select, .sci-fi-card textarea {
+        width: 100%;
+        padding: 0.75rem;
+        background: #1e293b;
+        border: 1px solid #0891b2;
+        color: #06b6d4;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+    }
+</style>
+{% endblock %}

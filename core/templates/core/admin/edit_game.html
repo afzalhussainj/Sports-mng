@@ -1,0 +1,67 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Edit Game - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="sci-fi-card p-6 mb-6">
+            <h2 class="text-cyan-400 font-bold text-2xl mb-2">EDIT GAME</h2>
+            <p class="text-cyan-600">Update game details</p>
+        </div>
+
+        <!-- Form -->
+        <div class="sci-fi-card p-6">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="space-y-6">
+                    <!-- Name -->
+                    <div>
+                        <label for="{{ form.name.id_for_label }}" class="block text-cyan-300 font-bold mb-2">
+                            Game Name
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <p class="text-red-400 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Display Order -->
+                    <div>
+                        <label for="{{ form.display_order.id_for_label }}" class="block text-cyan-300 font-bold mb-2">
+                            Display Order
+                        </label>
+                        {{ form.display_order }}
+                        {% if form.display_order.errors %}
+                            <p class="text-red-400 text-sm mt-1">{{ form.display_order.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Completed -->
+                    <div class="flex items-center space-x-3">
+                        {{ form.completed }}
+                        <label for="{{ form.completed.id_for_label }}" class="text-cyan-300 font-bold">
+                            Mark as Completed
+                        </label>
+                        {% if form.completed.errors %}
+                            <p class="text-red-400 text-sm mt-1">{{ form.completed.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-4 mt-8">
+                    <button type="submit" class="sci-fi-button bg-cyan-900 hover:bg-cyan-800 px-6 py-3">
+                        💾 SAVE CHANGES
+                    </button>
+                    <a href="{% url 'manage_games' %}" class="sci-fi-button bg-gray-700 hover:bg-gray-600 px-6 py-3">
+                        ← CANCEL
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

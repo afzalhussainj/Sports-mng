@@ -1,0 +1,67 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Login - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="w-screen h-screen flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <div class="sci-fi-card p-8">
+            <!-- Logo Section -->
+            <div class="text-center mb-8">
+                <h1 class="sci-fi-title text-3xl mb-2">SPORTS GALA</h1>
+                <p class="text-cyan-400 text-sm tracking-widest">SECURE LOGIN</p>
+            </div>
+
+            <!-- Login Form -->
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Email Field -->
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-bold text-cyan-400 mb-2">
+                        EMAIL <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.username }}
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="{{ form.password.id_for_label }}" class="block text-sm font-bold text-cyan-400 mb-2">
+                        PASSWORD <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.password }}
+                </div>
+
+                <!-- Error Messages -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-900/30 border-l-2 border-red-500 p-3 rounded">
+                        <p class="text-red-400 text-sm font-bold">LOGIN FAILED</p>
+                        {% for error in form.non_field_errors %}
+                            <p class="text-red-300 text-xs">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Submit Button -->
+                <button type="submit" class="sci-fi-button w-full font-bold tracking-wider">
+                    ACCESS GRANTED
+                </button>
+            </form>
+
+            <!-- Back to Dashboard -->
+            <div class="text-center mt-6">
+                <p class="text-cyan-500 text-xs">
+                    <a href="{% url 'public_dashboard' %}" class="text-magenta-400 hover:text-magenta-300">← RETURN TO DASHBOARD</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="text-center mt-6 text-cyan-600 text-xs">
+            <p>Admin: Use superuser credentials</p>
+            <p>Score Manager: Use assigned account</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

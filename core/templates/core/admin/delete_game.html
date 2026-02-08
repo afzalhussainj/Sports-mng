@@ -1,0 +1,54 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Delete Game - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-cyan-900 to-gray-900 p-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="sci-fi-card p-6 mb-6 border-2 border-red-500">
+            <h2 class="text-red-400 font-bold text-2xl mb-2">⚠️ DELETE GAME</h2>
+            <p class="text-red-300">This action cannot be undone</p>
+        </div>
+
+        <!-- Confirmation -->
+        <div class="sci-fi-card p-6">
+            <div class="mb-6">
+                <p class="text-cyan-300 text-lg mb-4">
+                    Are you sure you want to delete the following game?
+                </p>
+                <div class="bg-gray-800 border border-cyan-500 rounded p-4">
+                    <p class="text-cyan-400 font-bold text-xl">{{ game.name }}</p>
+                    <p class="text-cyan-600 text-sm mt-2">
+                        Status: {% if game.completed %}COMPLETED{% else %}ACTIVE{% endif %}
+                    </p>
+                </div>
+                <div class="mt-4 p-4 bg-red-900/30 border border-red-500 rounded">
+                    <p class="text-red-300 text-sm">
+                        <strong>Warning:</strong> Deleting this game will also delete:
+                    </p>
+                    <ul class="list-disc list-inside text-red-300 text-sm mt-2 space-y-1">
+                        <li>All teams associated with this game</li>
+                        <li>All team members</li>
+                        <li>All matches</li>
+                        <li>All awards</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <form method="post">
+                {% csrf_token %}
+                <div class="flex gap-4">
+                    <button type="submit" class="sci-fi-button bg-red-900 hover:bg-red-800 px-6 py-3">
+                        🗑️ YES, DELETE
+                    </button>
+                    <a href="{% url 'manage_games' %}" class="sci-fi-button bg-gray-700 hover:bg-gray-600 px-6 py-3">
+                        ← CANCEL
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Upload Memories - Admin{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-64 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">ADMIN</h2>
+            <p class="text-cyan-500 text-xs">Upload Memories</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="{% url 'manage_games' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎮 Games</a>
+            <a href="{% url 'manage_teams_members' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">👥 Teams & Members</a>
+            <a href="{% url 'manage_matches' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🏆 Matches</a>
+            <a href="{% url 'manage_awards' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">⭐ Awards</a>
+            <a href="{% url 'manage_score_managers' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">📊 Score Managers</a>
+            <a href="{% url 'randomizer_panel' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎲 Randomizer</a>
+            <a href="{% url 'upload_photo' %}" class="block px-4 py-2 bg-cyan-900/30 rounded text-cyan-300">📸 Upload Memories</a>
+        </nav>
+        <div class="border-t border-cyan-700 p-4">
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">UPLOAD MEMORIES</h1>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8 flex items-center justify-center">
+            <div class="max-w-2xl w-full">
+                <!-- Success/Error Messages -->
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for message in messages %}
+                            <div class="bg-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-900/30 border border-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-500 text-{% if message.tags == 'success' %}green{% elif message.tags == 'error' %}red{% else %}cyan{% endif %}-300 px-4 py-3 rounded mb-3">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="sci-fi-card p-8">
+                    <div class="text-center mb-8">
+                        <div class="text-5xl mb-4">📸</div>
+                        <h2 class="text-cyan-400 font-bold text-lg">UPLOAD SLIDESHOW PHOTO</h2>
+                        <p class="text-cyan-500 text-sm mt-2">Add memories to the live slideshow</p>
+                        <p class="text-cyan-600 text-xs mt-1 italic">Images will be auto-cropped to 16:9 aspect ratio</p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <div>
+                            <label class="text-cyan-400 font-semibold text-xs uppercase tracking-wide block mb-2">
+                                Select Photo <span class="text-red-400">*</span>
+                            </label>
+                            <input type="file" name="photo" accept="image/*" required
+                                   class="w-full px-4 py-3 bg-gray-800 border border-cyan-500 text-cyan-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-cyan-900 file:text-cyan-300 hover:file:bg-cyan-800" />
+                            <p class="text-cyan-500/70 text-xs mt-2">Supported formats: JPG, PNG, GIF. Will be converted to 16:9 JPEG.</p>
+                        </div>
+
+                        <div class="flex gap-3 pt-4">
+                            <button type="submit" class="flex-1 sci-fi-button text-xs py-3 bg-cyan-900 hover:bg-cyan-800">
+                                ⬆️ UPLOAD PHOTO
+                            </button>
+                            <a href="{% url 'admin_panel' %}" class="flex-1 sci-fi-button text-center text-xs py-3 bg-gray-700 hover:bg-gray-600">
+                                ← BACK
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sci-fi-card input[type="file"] {
+        cursor: pointer;
+    }
+    
+    .sci-fi-card input[type="file"]::-webkit-file-upload-button {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

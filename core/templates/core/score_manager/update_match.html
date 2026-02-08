@@ -1,0 +1,116 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Update Match Score - Sports Gala{% endblock %}
+
+{% block content %}
+<div class="w-screen h-screen flex items-center justify-center">
+    <div class="w-full max-w-2xl">
+        <div class="sci-fi-card p-8">
+            <!-- Header -->
+            <div class="mb-8 border-b border-cyan-700 pb-6">
+                <h1 class="sci-fi-title text-2xl mb-2">UPDATE MATCH SCORE</h1>
+                <div class="flex items-center gap-4 text-cyan-300">
+                    <span class="font-bold">{{ match.team_a.name }}</span>
+                    <span class="text-magenta-400">vs</span>
+                    <span class="font-bold">{{ match.team_b.name }}</span>
+                </div>
+            </div>
+
+            <!-- Update Form -->
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Current Scores -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-900 border border-cyan-700 p-4 rounded">
+                        <label class="block text-sm text-cyan-400 mb-2 font-bold">{{ match.team_a.name }} SCORE</label>
+                        {{ form.score_a }}
+                    </div>
+                    <div class="bg-gray-900 border border-cyan-700 p-4 rounded">
+                        <label class="block text-sm text-cyan-400 mb-2 font-bold">{{ match.team_b.name }} SCORE</label>
+                        {{ form.score_b }}
+                    </div>
+                </div>
+
+                <!-- Match Status -->
+                <div>
+                    <label class="block text-sm text-cyan-400 mb-2 font-bold">MATCH STATUS</label>
+                    {{ form.status }}
+                </div>
+
+                <!-- Winner Selection -->
+                <div>
+                    <label class="block text-sm text-cyan-400 mb-2 font-bold">WINNER (if completed)</label>
+                    {{ form.winner_team }}
+                </div>
+
+                <!-- Error Messages -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-900/30 border-l-2 border-red-500 p-4 rounded">
+                        {% for error in form.non_field_errors %}
+                            <p class="text-red-400">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Submit Buttons -->
+                <div class="flex gap-3 pt-6">
+                    <button type="submit" class="sci-fi-button flex-1 font-bold">UPDATE SCORE</button>
+                    <a href="{% url 'score_manager_game_detail' match.game.id %}" class="sci-fi-button flex-1 font-bold text-center bg-cyan-900">CANCEL</a>
+                </div>
+            </form>
+
+            <!-- Match Info -->
+            <div class="mt-8 pt-6 border-t border-cyan-700 space-y-2 text-sm text-cyan-500">
+                <p>Game: {{ match.game.name }}</p>
+                <p>Scheduled: {{ match.scheduled_at }}</p>
+                <p>Location: {{ match.location }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sci-fi-card input, .sci-fi-card select {
+        width: 100%;
+        padding: 0.75rem;
+        background: #1e293b;
+        border: 1px solid #0891b2;
+        color: #06b6d4;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 1rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const winnerSelect = document.getElementById('id_winner_team');
+        const teamAName = '{{ match.team_a.name|escapejs }}';
+        const teamBName = '{{ match.team_b.name|escapejs }}';
+        
+        // Store all original options
+        const allOptions = Array.from(winnerSelect.options).map(option => ({
+            value: option.value,
+            text: option.text
+        }));
+        
+        // Filter to only show the two teams in the match
+        const filteredOptions = allOptions.filter(option => {
+            // Keep empty option
+            if (!option.value) return true;
+            // Keep the two teams
+            if (option.text === teamAName || option.text === teamBName) return true;
+            return false;
+        });
+        
+        // Rebuild winner dropdown with only filtered options
+        winnerSelect.innerHTML = '';
+        filteredOptions.forEach(option => {
+            const newOption = new Option(option.text, option.value);
+            winnerSelect.add(newOption);
+        });
+    });
+</script>
+{% endblock %}
