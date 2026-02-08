@@ -5,7 +5,7 @@ regions:
 services:
   - name: sports-gala
     git:
-      repository_url: https://github.com/username/sports-gala.git
+      repository_url: https://github.com/afzalhussainj/Sports-mng.git
       branch: main
     healthchecks:
       startup:
@@ -22,14 +22,18 @@ services:
         value: "false"
       - key: DATABASE_URL
         scope: secret
-      - key: REDIS_URL
-        scope: secret
       - key: DJANGO_SECRET_KEY
         scope: secret
       - key: ALLOWED_HOSTS
-        value: sports-gala.koyeb.app,yourdomain.com
+        value: <your-app-name>.koyeb.app
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://sports-gala.koyeb.app,https://yourdomain.com,wss://sports-gala.koyeb.app,wss://yourdomain.com"
+        value: "https://<your-app-name>.koyeb.app"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://<your-app-name>.koyeb.app"
+      - key: SUPABASE_URL
+        scope: secret
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        scope: secret
     routes:
       - path: /
     ports:
