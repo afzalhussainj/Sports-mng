@@ -100,11 +100,15 @@
                                             </div>
                                         </div>
 
-                                        <!-- Memories Placeholder (actual content shown via floating overlay) -->
-                                        <div class="dashboard-card-inner flex flex-col opacity-0 pointer-events-none">
+                                        <!-- Memories (shown on mobile, placeholder on xl+) -->
+                                        <div class="dashboard-card-inner flex flex-col xl:opacity-0 xl:pointer-events-none">
+                                            <div class="text-[10px] text-slate-400 mb-1">Share Sports Gala 2026 memories on WhatsApp: 03034297404</div>
                                             <div class="section-title-compact">Memories</div>
-                                            <!-- 16:9 Aspect Ratio Container (matching actual memories height) -->
-                                            <div class="w-full relative bg-slate-950/40 rounded overflow-hidden" style="padding-bottom: 56.25%;"></div>
+                                            <!-- 16:9 Aspect Ratio Container -->
+                                            <div class="w-full relative bg-slate-950/40 rounded overflow-hidden" style="padding-bottom: 56.25%;">
+                                                <img alt="Sports Gala Memories" class="memory-slide absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-700" />
+                                                <div class="memory-empty absolute inset-0 flex items-center justify-center text-slate-400 text-xs">No memories yet</div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -117,14 +121,14 @@
                         {% endfor %}
 
                         <!-- Floating Memories Slideshow (Independent, Always Visible) -->
-                        <div id="floating-memories" class="relative xl:absolute xl:top-0 xl:right-0 xl:w-1/4 xl:pl-2 pointer-events-auto z-30">
+                        <div id="floating-memories" class="hidden xl:block xl:absolute xl:top-0 xl:right-0 xl:w-1/4 xl:pl-2 pointer-events-auto z-30">
                             <div class="dashboard-card-inner flex flex-col h-full">
                                 <div class="text-[10px] text-slate-400 mb-1">Share Sports Gala 2026 memories on WhatsApp: 03034297404</div>
                                 <div class="section-title-compact">Memories</div>
                                 <!-- 16:9 Aspect Ratio Container -->
                                 <div class="w-full relative bg-slate-950/40 rounded overflow-hidden" style="padding-bottom: 56.25%;">
-                                    <img id="memory-slide" alt="Sports Gala Memories" class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-700" />
-                                    <div id="memory-empty" class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs">No memories yet</div>
+                                    <img alt="Sports Gala Memories" class="memory-slide absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-700" />
+                                    <div class="memory-empty absolute inset-0 flex items-center justify-center text-slate-400 text-xs">No memories yet</div>
                                 </div>
                             </div>
                         </div>
@@ -235,18 +239,20 @@
     let memoryIndex = 0;
     let memoryInterval = null;
 
-    const memorySlide = document.getElementById('memory-slide');
-    const memoryEmpty = document.getElementById('memory-empty');
+    const memorySlides = document.querySelectorAll('.memory-slide');
+    const memoryEmpties = document.querySelectorAll('.memory-empty');
     const headerSportName = document.getElementById('header-sport-name');
 
-    if (memorySlide) {
-        memorySlide.addEventListener('error', () => {
+    if (memorySlides.length) {
+        memorySlides.forEach(slide => {
+            slide.addEventListener('error', () => {
             if (!memoryImages.length) {
-                if (memoryEmpty) memoryEmpty.classList.remove('hidden');
+                memoryEmpties.forEach(empty => empty.classList.remove('hidden'));
                 return;
             }
             memoryIndex += 1;
             showMemorySlide();
+            });
         });
     }
 
@@ -258,30 +264,29 @@
     }
 
     function showMemorySlide() {
-        if (!memoryImages.length || !memorySlide) {
-            if (memoryEmpty) {
-                memoryEmpty.classList.remove('hidden');
-            }
-            if (memorySlide) {
-                memorySlide.classList.remove('opacity-100');
-                memorySlide.classList.add('opacity-0');
-                memorySlide.removeAttribute('src');
-            }
+        if (!memoryImages.length || !memorySlides.length) {
+            memoryEmpties.forEach(empty => empty.classList.remove('hidden'));
+            memorySlides.forEach(slide => {
+                slide.classList.remove('opacity-100');
+                slide.classList.add('opacity-0');
+                slide.removeAttribute('src');
+            });
             return;
         }
 
-        if (memoryEmpty) {
-            memoryEmpty.classList.add('hidden');
-        }
-
-        memorySlide.classList.remove('opacity-100');
-        memorySlide.classList.add('opacity-0');
+        memoryEmpties.forEach(empty => empty.classList.add('hidden'));
+        memorySlides.forEach(slide => {
+            slide.classList.remove('opacity-100');
+            slide.classList.add('opacity-0');
+        });
 
         setTimeout(() => {
             const nextUrl = memoryImages[memoryIndex % memoryImages.length];
-            memorySlide.src = nextUrl;
-            memorySlide.classList.remove('opacity-0');
-            memorySlide.classList.add('opacity-100');
+            memorySlides.forEach(slide => {
+                slide.src = nextUrl;
+                slide.classList.remove('opacity-0');
+                slide.classList.add('opacity-100');
+            });
             memoryIndex += 1;
         }, 250);
     }
@@ -753,7 +758,7 @@
         }
 
         // Initialize memories slideshow
-        if (memorySlide) {
+        if (memorySlides.length) {
             startMemoryRotation();
             // Refresh image list from server every 60 seconds (not every 8 seconds)
             setInterval(refreshMemoryImages, 60000);
