@@ -46,7 +46,7 @@
                                     <!-- First Row: Top Teams, Achievements, Upcoming Matches, Memories -->
                                     <div class="col-span-12 grid grid-cols-1 xl:grid-cols-4 gap-2"">
                                         <!-- Top Teams -->
-                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed">
+                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed order-2 xl:order-none">
                                             <div class="section-title-compact">Top Teams</div>
                                             <div class="grid grid-cols-12 text-[10px] text-slate-400 uppercase tracking-wider pb-1 px-1">
                                                 <div class="col-span-2">Rank</div>
@@ -59,7 +59,7 @@
                                         </div>
 
                                         <!-- Achievements -->
-                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed">
+                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed order-3 xl:order-none">
                                             <div class="section-title-compact">Achievements</div>
                                             <div class="space-y-1 flex-1 overflow-hidden">
                                                 {% with awards=game.awards.all %}
@@ -93,7 +93,7 @@
                                         </div>
 
                                         <!-- Upcoming Matches -->
-                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed">
+                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed order-4 xl:order-none">
                                             <div class="section-title-compact">Upcoming Matches</div>
                                             <div id="spotlight-matches-{{ game.id }}" class="space-y-1 flex-1 overflow-hidden">
                                                 <!-- Populated via JavaScript (Top 5 only) -->
@@ -101,7 +101,7 @@
                                         </div>
 
                                         <!-- Memories (shown on mobile, placeholder on xl+) -->
-                                        <div class="dashboard-card-inner flex flex-col xl:opacity-0 xl:pointer-events-none">
+                                        <div class="dashboard-card-inner flex flex-col order-1 xl:order-none xl:opacity-0 xl:pointer-events-none">
                                             <div class="text-[10px] text-slate-400 mb-1">Share Sports Gala 2026 memories on WhatsApp: 03034297404</div>
                                             <div class="section-title-compact">Memories</div>
                                             <!-- 16:9 Aspect Ratio Container -->
