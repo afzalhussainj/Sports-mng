@@ -238,6 +238,17 @@
     const memoryEmpty = document.getElementById('memory-empty');
     const headerSportName = document.getElementById('header-sport-name');
 
+    if (memorySlide) {
+        memorySlide.addEventListener('error', () => {
+            if (!memoryImages.length) {
+                if (memoryEmpty) memoryEmpty.classList.remove('hidden');
+                return;
+            }
+            memoryIndex += 1;
+            showMemorySlide();
+        });
+    }
+
     function updateSummary(gameId) {
         const stats = gameStats.get(String(gameId));
         if (!stats) return;
@@ -250,6 +261,11 @@
             if (memoryEmpty) {
                 memoryEmpty.classList.remove('hidden');
             }
+            if (memorySlide) {
+                memorySlide.classList.remove('opacity-100');
+                memorySlide.classList.add('opacity-0');
+                memorySlide.removeAttribute('src');
+            }
             return;
         }
 
@@ -261,7 +277,8 @@
         memorySlide.classList.add('opacity-0');
 
         setTimeout(() => {
-            memorySlide.src = memoryImages[memoryIndex % memoryImages.length];
+            const nextUrl = memoryImages[memoryIndex % memoryImages.length];
+            memorySlide.src = nextUrl;
             memorySlide.classList.remove('opacity-0');
             memorySlide.classList.add('opacity-100');
             memoryIndex += 1;
@@ -278,13 +295,9 @@
             const res = await fetch('/slideshow-json/');
             const data = await res.json();
             if (Array.isArray(data.images)) {
-                const hadImages = memoryImages.length > 0;
                 memoryImages = data.images;
-                // Only reset index if we previously had no images
-                if (!hadImages && memoryImages.length > 0) {
-                    memoryIndex = 0;
-                    showMemorySlide();
-                }
+                memoryIndex = 0;
+                showMemorySlide();
             }
         } catch (error) {
             console.error('Error refreshing memory images:', error);
