@@ -760,8 +760,8 @@
         // Initialize memories slideshow
         if (memorySlides.length) {
             startMemoryRotation();
-            // Refresh image list from server every 60 seconds (not every 8 seconds)
-            setInterval(refreshMemoryImages, 60000);
+            // Refresh image list from server every 10 minutes
+            setInterval(refreshMemoryImages, 600000);
         }
     });
 
