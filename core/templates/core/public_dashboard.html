@@ -301,7 +301,19 @@
             const res = await fetch('/slideshow-json/');
             const data = await res.json();
             if (Array.isArray(data.images)) {
+                const currentSrc = memorySlides.length ? memorySlides[0].getAttribute('src') : null;
                 memoryImages = data.images;
+
+                if (!memoryImages.length) {
+                    memoryIndex = 0;
+                    showMemorySlide();
+                    return;
+                }
+
+                if (currentSrc && memoryImages.includes(currentSrc)) {
+                    return;
+                }
+
                 memoryIndex = 0;
                 showMemorySlide();
             }
