@@ -1,53 +1,73 @@
 {% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}Manage Memories{% endblock %}
+{% block title %}Manage Memories - Admin{% endblock %}
 
 {% block content %}
-<div class="w-screen min-h-screen flex flex-col overflow-hidden">
-    <div class="header-gradient border-b border-cyan-700 px-8 py-4">
-        <h1 class="sci-fi-title text-2xl">MANAGE MEMORIES</h1>
+<div class="w-screen min-h-screen flex flex-col md:flex-row overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-full md:w-64 sci-fi-border border-b md:border-b-0 md:border-r flex flex-col">
+        <div class="p-6 border-b border-cyan-700">
+            <h2 class="text-cyan-400 font-bold text-lg">ADMIN</h2>
+            <p class="text-cyan-500 text-xs">Memories Management</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <a href="{% url 'manage_games' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎮 Games</a>
+            <a href="{% url 'manage_teams_members' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">👥 Teams & Members</a>
+            <a href="{% url 'manage_matches' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🏆 Matches</a>
+            <a href="{% url 'manage_awards' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">⭐ Awards</a>
+            <a href="{% url 'manage_score_managers' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">📊 Score Managers</a>
+            <a href="{% url 'randomizer_panel' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">🎲 Randomizer</a>
+            <a href="{% url 'upload_photo' %}" class="block px-4 py-2 rounded text-cyan-300 hover:bg-cyan-900/20">📸 Upload Memories</a>
+            <a href="{% url 'manage_memories' %}" class="block px-4 py-2 bg-cyan-900/30 rounded text-cyan-300">🖼️ Manage Memories</a>
+        </nav>
+        <div class="border-t border-cyan-700 p-4">
+            <a href="{% url 'logout' %}" class="sci-fi-button text-xs w-full block text-center">LOGOUT</a>
+        </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-6">
-        <div class="mb-4">
-            <a href="{% url 'admin_panel' %}" class="sci-fi-button text-xs">← Back to Admin Panel</a>
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+            <h1 class="sci-fi-title text-2xl">MANAGE MEMORIES</h1>
         </div>
 
-        {% if messages %}
-            <div class="space-y-2 mb-4">
-                {% for message in messages %}
-                    <div class="text-xs px-3 py-2 rounded border border-cyan-700/40 bg-slate-900/60 text-cyan-200">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% if memories %}
-                {% for mem in memories %}
-                    <div class="dashboard-card-inner flex flex-col gap-2">
-                        <div class="relative w-full overflow-hidden rounded border border-slate-800/60 bg-slate-950/50" style="padding-bottom: 56.25%;">
-                            {% if mem.public_url %}
-                                <img src="{{ mem.public_url }}" alt="Memory" class="absolute inset-0 w-full h-full object-cover" />
-                            {% else %}
-                                <div class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs">No preview</div>
-                            {% endif %}
+        <div class="flex-1 overflow-y-auto p-6">
+            {% if messages %}
+                <div class="space-y-2 mb-4">
+                    {% for message in messages %}
+                        <div class="text-xs px-3 py-2 rounded border border-cyan-700/40 bg-slate-900/60 text-cyan-200">
+                            {{ message }}
                         </div>
-                        <div class="text-[10px] text-slate-400 truncate">{{ mem.public_url }}</div>
-                        <form method="post" class="mt-1">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete" />
-                            <input type="hidden" name="path" value="{{ mem.path }}" />
-                            <input type="hidden" name="public_url" value="{{ mem.public_url }}" />
-                            <button type="submit" class="sci-fi-button text-[10px]">Delete</button>
-                        </form>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div class="text-slate-400 text-sm">No memories found.</div>
+                    {% endfor %}
+                </div>
             {% endif %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% if memories %}
+                    {% for mem in memories %}
+                        <div class="dashboard-card-inner flex flex-col gap-2">
+                            <div class="relative w-full overflow-hidden rounded border border-slate-800/60 bg-slate-950/50" style="padding-bottom: 56.25%;">
+                                {% if mem.public_url %}
+                                    <img src="{{ mem.public_url }}" alt="Memory" class="absolute inset-0 w-full h-full object-cover" />
+                                {% else %}
+                                    <div class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs">No preview</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-[10px] text-slate-400 truncate">{{ mem.public_url }}</div>
+                            <form method="post" class="mt-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete" />
+                                <input type="hidden" name="path" value="{{ mem.path }}" />
+                                <input type="hidden" name="public_url" value="{{ mem.public_url }}" />
+                                <button type="submit" class="sci-fi-button text-[10px]">Delete</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-slate-400 text-sm">No memories found.</div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
