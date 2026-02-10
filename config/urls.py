@@ -32,6 +32,7 @@ from core.views import (
     randomizer_api_clear_available,
     randomizer_api_pick_teams,
     upload_photo,
+    manage_memories,
     slideshow_json,
     edit_game,
     delete_game,
@@ -77,6 +78,7 @@ urlpatterns = [
     path('manager/score-managers/<int:manager_id>/assign/', assign_score_manager_games, name='assign_score_manager_games'),
     path('manager/score-managers/<int:manager_id>/delete/', delete_score_manager, name='delete_score_manager'),
     path('manager/score-managers/<int:manager_id>/change-password/', change_score_manager_password, name='change_score_manager_password'),
+    path('manager/memories/', manage_memories, name='manage_memories'),
     
     # Score Manager pages
     path('score-manager/', score_manager_panel, name='score_manager_panel'),

@@ -261,6 +261,41 @@ def upload_photo(request):
     return render(request, 'core/upload_photo.html')
 
 
+@login_required(login_url='login')
+@user_passes_test(is_admin)
+def manage_memories(request):
+    """Admin: list and delete slideshow memories stored in Supabase."""
+    supabase = get_supabase_client()
+    if not supabase:
+        messages.error(request, 'Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.')
+        return render(request, 'core/admin/manage_memories.html', {'memories': []})
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        path = (request.POST.get('path') or '').strip()
+        public_url = (request.POST.get('public_url') or '').strip()
+
+        if action == 'delete':
+            try:
+                if path:
+                    supabase.storage.from_("gala-slideshow").remove([path])
+                    supabase.table("slideshow_images").delete().eq("path", path).execute()
+                elif public_url:
+                    supabase.table("slideshow_images").delete().eq("public_url", public_url).execute()
+                messages.success(request, 'Memory deleted successfully.')
+            except Exception as exc:
+                messages.error(request, f'Delete failed: {exc}')
+
+    memories = []
+    try:
+        res = supabase.table("slideshow_images").select("id,public_url,path,created_at").order("created_at", desc=True).limit(500).execute()
+        memories = res.data or []
+    except Exception as exc:
+        messages.error(request, f'Failed to load memories: {exc}')
+
+    return render(request, 'core/admin/manage_memories.html', {'memories': memories, 'title': 'Manage Memories'})
+
+
 def slideshow_json(request):
     """Return slideshow images as JSON for polling"""
     images = fetch_slideshow_images(limit=100)

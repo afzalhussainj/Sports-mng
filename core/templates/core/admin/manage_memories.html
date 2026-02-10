@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Manage Memories{% endblock %}
+
+{% block content %}
+<div class="w-screen min-h-screen flex flex-col overflow-hidden">
+    <div class="header-gradient border-b border-cyan-700 px-8 py-4">
+        <h1 class="sci-fi-title text-2xl">MANAGE MEMORIES</h1>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6">
+        <div class="mb-4">
+            <a href="{% url 'admin_panel' %}" class="sci-fi-button text-xs">← Back to Admin Panel</a>
+        </div>
+
+        {% if messages %}
+            <div class="space-y-2 mb-4">
+                {% for message in messages %}
+                    <div class="text-xs px-3 py-2 rounded border border-cyan-700/40 bg-slate-900/60 text-cyan-200">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% if memories %}
+                {% for mem in memories %}
+                    <div class="dashboard-card-inner flex flex-col gap-2">
+                        <div class="relative w-full overflow-hidden rounded border border-slate-800/60 bg-slate-950/50" style="padding-bottom: 56.25%;">
+                            {% if mem.public_url %}
+                                <img src="{{ mem.public_url }}" alt="Memory" class="absolute inset-0 w-full h-full object-cover" />
+                            {% else %}
+                                <div class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs">No preview</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-[10px] text-slate-400 truncate">{{ mem.public_url }}</div>
+                        <form method="post" class="mt-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete" />
+                            <input type="hidden" name="path" value="{{ mem.path }}" />
+                            <input type="hidden" name="public_url" value="{{ mem.public_url }}" />
+                            <button type="submit" class="sci-fi-button text-[10px]">Delete</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-slate-400 text-sm">No memories found.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
