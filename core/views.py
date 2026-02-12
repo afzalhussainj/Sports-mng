@@ -553,6 +553,8 @@ def manage_members(request):
 
 @login_required(login_url='login')
 @user_passes_test(is_admin)
+@login_required(login_url='login')
+@user_passes_test(is_admin)
 def manage_matches(request):
     """List and manage matches"""
     if request.method == 'POST':
@@ -585,7 +587,9 @@ def manage_matches(request):
     else:
         form = MatchForm()
     
-    matches = Match.objects.select_related('game', 'team_a', 'team_b').order_by('game__name')
+    # Optimized query: select_related for all foreign keys to avoid N+1 queries
+    # Order by game first for regrouping, then by scheduled_at
+    matches = Match.objects.select_related('game', 'team_a', 'team_b', 'winner_team').order_by('game__name', 'scheduled_at')[:500]
     context = {'matches': matches, 'form': form, 'title': 'Manage Matches'}
     return render(request, 'core/admin/manage_matches.html', context)
 

@@ -172,6 +172,11 @@ class Match(models.Model):
     
     class Meta:
         ordering = ['scheduled_at']
+        # Add indexes for common queries in admin
+        indexes = [
+            models.Index(fields=['game', 'scheduled_at']),
+            models.Index(fields=['status']),
+        ]
     
     def __str__(self):
         team_a_name = self.team_a.name if self.team_a else "TBD"

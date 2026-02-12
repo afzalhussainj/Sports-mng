@@ -6,6 +6,13 @@ from django.forms import inlineformset_factory
 from core.models import (
     Game, Team, TeamMember, Match, GameAward, ScoreManagerProfile
 )
+import time
+
+
+# Cache for team options to avoid repeated database queries in form rendering
+_TEAM_OPTIONS_CACHE = {}
+_TEAM_OPTIONS_CACHE_TIME = {}
+CACHE_DURATION_SECONDS = 300  # 5 minutes
 
 
 class TeamSelectWidget(forms.Select):
@@ -31,8 +38,16 @@ class MatchTeamSelectWidget(forms.Select):
             try:
                 # Extract the actual ID if it's a ModelChoiceIteratorValue
                 team_id = value.value if hasattr(value, 'value') else value
-                team = Team.objects.get(pk=team_id)
-                option['attrs']['data-game-id'] = team.game.id
+                # Cache team lookups to avoid N+1 queries
+                cache_key = f'team_{team_id}'
+                current_time = time.time()
+                
+                if cache_key not in _TEAM_OPTIONS_CACHE or (current_time - _TEAM_OPTIONS_CACHE_TIME.get(cache_key, 0)) > CACHE_DURATION_SECONDS:
+                    team = Team.objects.select_related('game').get(pk=team_id)
+                    _TEAM_OPTIONS_CACHE[cache_key] = team.game.id
+                    _TEAM_OPTIONS_CACHE_TIME[cache_key] = current_time
+                
+                option['attrs']['data-game-id'] = _TEAM_OPTIONS_CACHE[cache_key]
             except (Team.DoesNotExist, ValueError, AttributeError, TypeError):
                 pass
         return option
