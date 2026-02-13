@@ -92,14 +92,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Upcoming Matches -->
-                                        <div class="dashboard-card-inner flex flex-col spotlight-card-fixed order-4 xl:order-none">
-                                            <div class="section-title-compact">Upcoming Matches</div>
-                                            <div id="spotlight-matches-{{ game.id }}" class="space-y-1 flex-1 overflow-hidden">
-                                                <!-- Populated via JavaScript (Top 5 only) -->
-                                            </div>
-                                        </div>
-
                                         <!-- Memories (shown on mobile, placeholder on xl+) -->
                                         <div class="dashboard-card-inner flex flex-col order-1 xl:order-none xl:opacity-0 xl:pointer-events-none">
                                             <div class="text-[10px] text-slate-400 mb-1">Share Sports Gala 2026 memories on WhatsApp: 03034297404</div>
@@ -345,24 +337,6 @@
                 matchesData = await matchesResponse.json();
             } catch (error) {
                 console.error('Error loading matches:', error);
-            }
-
-            const matchesDiv = document.getElementById(`spotlight-matches-${gameId}`);
-            if (matchesDiv) {
-                const upcoming = (matchesData.matches || []).filter(m => m.status !== 'completed').slice(0, 5);
-                matchesDiv.innerHTML = upcoming.length > 0 ? upcoming.map(match => {
-                    const status = (match.status || 'upcoming').toLowerCase();
-                    const label = status === 'ongoing' || status === 'live' ? 'LIVE' : status === 'completed' ? 'FINAL' : 'UPCOMING';
-                    return `
-                        <div class="flex items-start gap-2 rounded border border-slate-800/60 bg-slate-900/40 px-2 py-1">
-                            <div class="mt-0.5 h-1.5 w-1.5 rounded-full ${label === 'LIVE' ? 'bg-rose-400' : label === 'FINAL' ? 'bg-emerald-400' : 'bg-sky-400'}"></div>
-                            <div class="flex-1">
-                                <div class="text-xs font-medium text-slate-100">${match.team_a} <span class="text-slate-400">vs</span> ${match.team_b}</div>
-                                <div class="text-[10px] text-slate-400">${match.location} • ${new Date(match.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('') : '<p class="text-slate-500 text-center text-sm">No upcoming matches</p>';
             }
 
             // Update tournament bracket (non-blocking)
@@ -918,12 +892,6 @@
         background: rgba(244, 63, 94, 0.18);
         color: #fda4af;
         border-color: rgba(244, 63, 94, 0.35);
-    }
-
-    .status-upcoming {
-        background: rgba(56, 189, 248, 0.16);
-        color: #bae6fd;
-        border-color: rgba(56, 189, 248, 0.35);
     }
 
     .status-final {
